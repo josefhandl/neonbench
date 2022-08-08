@@ -1,4 +1,8 @@
 #include <cassert>
+#include <immintrin.h> // AVX + SSE4 header
+#include <chrono>
+#include <vector>
+#include <iostream>
 
 #include "avx_ex.h"
 
@@ -7,7 +11,7 @@
 #define MATRIX_SIZE 1*AVX2_WIDTH_FLOAT
 #define MATRIX_SIZE_FULL MATRIX_SIZE*MATRIX_SIZE
 
-void avx256::vector_add(const float *matA, const float *matB, float *matR) {
+void avx::vector_add(const float *matA, const float *matB, float *matR) {
     for (int i = 0; i < (int)(MATRIX_SIZE_FULL/8); i++) {
         __m256 a = _mm256_load_ps(&matA[i*8]);
         __m256 b = _mm256_load_ps(&matB[i*8]);
@@ -16,7 +20,7 @@ void avx256::vector_add(const float *matA, const float *matB, float *matR) {
     }
 }
 
-void avx128::vector_add(const float *matA, const float *matB, float *matR) {
+void sse::vector_add(const float *matA, const float *matB, float *matR) {
     for (int i = 0; i < (int)(MATRIX_SIZE_FULL/4); i++) {
         __m128 a = _mm_load_ps(&matA[i*4]);
         __m128 b = _mm_load_ps(&matB[i*4]);
@@ -31,7 +35,7 @@ void linear::vector_add(const float *matA, const float *matB, float *matR) {
     }
 }
 
-void avx256::matrix_mul(const float *matA, const float *matB, float *matR) {
+void avx::matrix_mul(const float *matA, const float *matB, float *matR) {
     for (int y = 0; y < MATRIX_SIZE; y++) {
         for (int x = 0; x < MATRIX_SIZE; x++) {
 
@@ -91,6 +95,8 @@ int main() {
         }
     }
 
+    // TEST
+
     //linear::matrix_mul(matA, matB, matR);
     linear::vector_add(matA, matB, matR);
 
@@ -102,13 +108,25 @@ int main() {
     std::cout << std::endl;
 
     reset_result(matR);
-    //avx::matrix_mul(matA, matB, matR);
-    avx256::vector_add(matA, matB, matR);
+    sse::vector_add(matA, matB, matR);
+
+    std::cout << "SSE result: ";
+    for (int i = 0; i < MATRIX_SIZE_FULL; i++) {
+        std::cout << static_cast<int>(matR[i]) << " ";
+    }
+    std::cout << std::endl;
+
+    reset_result(matR);
+    avx::vector_add(matA, matB, matR);
 
     std::cout << "AVX result: ";
     for (int i = 0; i < MATRIX_SIZE_FULL; i++) {
         std::cout << static_cast<int>(matR[i]) << " ";
     }
+    std::cout << std::endl;
+
+
+    // BENCHMARK
     std::cout << std::endl;
 
     auto s = std::chrono::high_resolution_clock::now();
@@ -123,8 +141,17 @@ int main() {
 
     s = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < 8192; i++) {
+        sse::vector_add(matA, matB, matR);
+    }
+
+    e = std::chrono::high_resolution_clock::now();
+    t = std::chrono::duration_cast<std::chrono::microseconds>(e - s);
+    std::cout << "SSE execution time: " << t.count() << " µs" << std::endl;
+
+    s = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < 8192; i++) {
         //avx::matrix_mul(matA, matB, matR);
-        avx256::vector_add(matA, matB, matR);
+        avx::vector_add(matA, matB, matR);
     }
 
     e = std::chrono::high_resolution_clock::now();
