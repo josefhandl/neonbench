@@ -2,57 +2,132 @@
 
 #include "avx_ex.h"
 
+#define MAX_RAND_NUM 4096u
 #define AVX2_WIDTH_FLOAT (int)(256/(sizeof(float)*8))
+#define MATRIX_SIZE 1*AVX2_WIDTH_FLOAT
+#define MATRIX_SIZE_FULL MATRIX_SIZE*MATRIX_SIZE
 
-void avx::vector_add(const float *in1, const float *in2, float *ret) {
-    __m256 a = _mm256_load_ps(in1);
-    __m256 b = _mm256_load_ps(in2);
-    __m256 c = _mm256_add_ps(a, b);
-    _mm256_store_ps(ret, c);
+void avx256::vector_add(const float *matA, const float *matB, float *matR) {
+    for (int i = 0; i < (int)(MATRIX_SIZE_FULL/8); i++) {
+        __m256 a = _mm256_load_ps(&matA[i*8]);
+        __m256 b = _mm256_load_ps(&matB[i*8]);
+        __m256 r = _mm256_add_ps(a, b);
+        _mm256_store_ps(&matR[i*8], r);
+    }
 }
 
-void linear::vector_add(const float *in1, const float *in2, float *ret) {
-    for (size_t i = 0; i < 8; i++) {
-        ret[i] = in1[i] + in2[i];
+void avx128::vector_add(const float *matA, const float *matB, float *matR) {
+    for (int i = 0; i < (int)(MATRIX_SIZE_FULL/4); i++) {
+        __m128 a = _mm_load_ps(&matA[i*4]);
+        __m128 b = _mm_load_ps(&matB[i*4]);
+        __m128 r = _mm_add_ps(a, b);
+        _mm_store_ps(&matR[i*4], r);
+    }
+}
+
+void linear::vector_add(const float *matA, const float *matB, float *matR) {
+    for (size_t i = 0; i < MATRIX_SIZE_FULL; i++) {
+        matR[i] = matA[i] + matB[i];
+    }
+}
+
+void avx256::matrix_mul(const float *matA, const float *matB, float *matR) {
+    for (int y = 0; y < MATRIX_SIZE; y++) {
+        for (int x = 0; x < MATRIX_SIZE; x++) {
+
+            alignas(32) float subMatB[8];
+            for (int n = 0; n < 8; n++) {
+                subMatB[n] = matB[n*MATRIX_SIZE+x];
+            }
+
+            __m256 a = _mm256_load_ps(&matA[y]);
+            __m256 b = _mm256_load_ps(subMatB);
+            __m256 r = _mm256_mul_ps(a, b);
+
+            __m128 r0 = _mm256_extractf128_ps(r, 0);
+            __m128 r1 = _mm256_extractf128_ps(r, 1);
+            //__m128 r1 = _mm256_extractf32x4_ps (r, 1);
+
+            _mm256_store_ps(&matR[y*MATRIX_SIZE+x], r);
+        }
+    }
+}
+
+void linear::matrix_mul(const float *matA, const float *matB, float *matR) {
+    // TODO two versions - cpu cache-unfriendly + friendly
+    for (int y = 0; y < MATRIX_SIZE; y++) {
+        for (int x = 0; x < MATRIX_SIZE; x++) {
+            float num = 0;
+
+            for (int n = 0; n < MATRIX_SIZE; n++) {
+                num += matA[y*MATRIX_SIZE+n] * matB[n*MATRIX_SIZE+x];
+            }
+
+            matR[y*MATRIX_SIZE+x] = num;
+        }
+    }
+}
+
+void reset_result(float *matR) {
+    for (int y = 0; y < MATRIX_SIZE; y++) {
+        for (int x = 0; x < MATRIX_SIZE; x++) {
+            matR[y*MATRIX_SIZE+x] = 0;
+        }
     }
 }
 
 int main() {
-    alignas(32) float a[AVX2_WIDTH_FLOAT] = { 1, 2, 3, 4, 5, 6, 7, 8 };
-    alignas(32) float b[AVX2_WIDTH_FLOAT] = { 8, 7, 6, 5, 4, 3, 2, 1 };
-    alignas(32) float r[AVX2_WIDTH_FLOAT];
+    // init matrix
+    alignas(32) float matA[MATRIX_SIZE_FULL];
+    alignas(32) float matB[MATRIX_SIZE_FULL];
+    alignas(32) float matR[MATRIX_SIZE_FULL];
 
-    linear::vector_add(a, b, r);
+    // fill matrices
+    // TODO cache-friendly?
+    for (int y = 0; y < MATRIX_SIZE; y++) {
+        for (int x = 0; x < MATRIX_SIZE; x++) {
+            matA[y*MATRIX_SIZE+x] = static_cast<float>(rand() % MAX_RAND_NUM);
+            matB[y*MATRIX_SIZE+x] = static_cast<float>(rand() % MAX_RAND_NUM);
+        }
+    }
+
+    //linear::matrix_mul(matA, matB, matR);
+    linear::vector_add(matA, matB, matR);
 
     std::cout << "Scalar result: ";
-    for (int i = 0; i < AVX2_WIDTH_FLOAT; i++) {
-        std::cout << r[i] << " ";
+
+    for (int i = 0; i < MATRIX_SIZE_FULL; i++) {
+        std::cout << static_cast<int>(matR[i]) << " ";
     }
     std::cout << std::endl;
 
-    avx::vector_add(a, b, r);
+    reset_result(matR);
+    //avx::matrix_mul(matA, matB, matR);
+    avx256::vector_add(matA, matB, matR);
 
     std::cout << "AVX result: ";
-    for (int i = 0; i < 8; i++) {
-        std::cout << r[i] << " ";
+    for (int i = 0; i < MATRIX_SIZE_FULL; i++) {
+        std::cout << static_cast<int>(matR[i]) << " ";
     }
     std::cout << std::endl;
 
     auto s = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < 8192; i++) {
-        linear::vector_add(a, b, r);
+        //linear::matrix_mul(matA, matB, matR);
+        linear::vector_add(matA, matB, matR);
     }
 
     auto e = std::chrono::high_resolution_clock::now();
     auto t = std::chrono::duration_cast<std::chrono::microseconds>(e - s);
-    std::cout << "Scalar execution time: " << t.count() << " uSeconds" << std::endl;
+    std::cout << "Scalar execution time: " << t.count() << " µs" << std::endl;
 
     s = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < 8192; i++) {
-        avx::vector_add(a, b, r);
+        //avx::matrix_mul(matA, matB, matR);
+        avx256::vector_add(matA, matB, matR);
     }
 
     e = std::chrono::high_resolution_clock::now();
     t = std::chrono::duration_cast<std::chrono::microseconds>(e - s);
-    std::cout << "AVX execution time: " << t.count() << " uSeconds" << std::endl;
+    std::cout << "AVX execution time: " << t.count() << " µs" << std::endl;
 }
