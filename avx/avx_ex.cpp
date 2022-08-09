@@ -14,7 +14,7 @@
 #define TEST_ITERATIONS 16384*8
 #define MAX_RAND_NUM 16u
 #define AVX_WIDTH_FLOAT (int)(256/(sizeof(float)*8))
-#define MATRIX_SIZE 1*AVX_WIDTH_FLOAT
+#define MATRIX_SIZE (1*AVX_WIDTH_FLOAT)
 #define MATRIX_SIZE_FULL MATRIX_SIZE*MATRIX_SIZE
 
 // https://www.appsloveworld.com/cplus/100/359/horizontal-sum-of-32-bit-floats-in-256-bit-avx-vector
@@ -42,6 +42,13 @@ void sse::vector_add(const float *matA, const float *matB, float *matR) {
         __m128 r = _mm_add_ps(a, b);
         _mm_store_ps(&matR[i*4], r);
     }
+
+    int overlap_start = (int)(MATRIX_SIZE_FULL/4)*4;
+    int overlap_end = overlap_start + MATRIX_SIZE_FULL%4;
+
+    for (int i = overlap_start; i < overlap_end; i++) {
+        matR[i] = matA[i] + matB[i];
+    }
 }
 
 void avx::vector_add(const float *matA, const float *matB, float *matR) {
@@ -50,6 +57,13 @@ void avx::vector_add(const float *matA, const float *matB, float *matR) {
         __m256 b = _mm256_load_ps(&matB[i*8]);
         __m256 r = _mm256_add_ps(a, b);
         _mm256_store_ps(&matR[i*8], r);
+    }
+
+    int overlap_start = (int)(MATRIX_SIZE_FULL/8)*8;
+    int overlap_end = overlap_start + MATRIX_SIZE_FULL%8;
+
+    for (int i = overlap_start; i < overlap_end; i++) {
+        matR[i] = matA[i] + matB[i];
     }
 }
 
@@ -111,6 +125,13 @@ int main() {
     // TEST
     linear::vector_add(matA, matB, matRf);
 
+/*
+    for (int i = 0; i < MATRIX_SIZE_FULL; i++) {
+        std::cout << matRf[i] << " ";
+    }
+    std::cout << std::endl;
+    */
+
     sse::vector_add(matA, matB, matR);
     bool ok_sse = true;
     for (int i = 0; ok_sse && i < MATRIX_SIZE_FULL; i++) {
@@ -119,6 +140,13 @@ int main() {
             std::cout << "SSE: wrong result" << std::endl << std::endl;
         }
     }
+
+/*
+    for (int i = 0; i < MATRIX_SIZE_FULL; i++) {
+        std::cout << matR[i] << " ";
+    }
+    std::cout << std::endl;
+    */
 
     reset_result(matR);
     // TODO transposed matrix for multiplication
