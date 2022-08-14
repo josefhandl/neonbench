@@ -14,7 +14,8 @@
 #define TEST_ITERATIONS 16384*8
 #define MAX_RAND_NUM 16u
 #define AVX_WIDTH_FLOAT (int)(256/(sizeof(float)*8))
-#define MATRIX_SIZE (1*AVX_WIDTH_FLOAT)
+#define AVX512_WIDTH_FLOAT AVX_WIDTH_FLOAT*2
+#define MATRIX_SIZE (1*AVX512_WIDTH_FLOAT)
 #define MATRIX_SIZE_FULL MATRIX_SIZE*MATRIX_SIZE
 
 // https://www.appsloveworld.com/cplus/100/359/horizontal-sum-of-32-bit-floats-in-256-bit-avx-vector
@@ -67,6 +68,22 @@ void avx::vector_add(const float *matA, const float *matB, float *matR) {
     }
 }
 
+void avx512::vector_add(const float *matA, const float *matB, float *matR) {
+    for (int i = 0; i < (int)(MATRIX_SIZE_FULL/16); i++) {
+        __m512 a = _mm512_load_ps(&matA[i*16]);
+        __m512 b = _mm512_load_ps(&matB[i*16]);
+        __m512 r = _mm512_add_ps(a, b);
+        _mm512_store_ps(&matR[i*16], r);
+    }
+
+    int overlap_start = (int)(MATRIX_SIZE_FULL/16)*16;
+    int overlap_end = overlap_start + MATRIX_SIZE_FULL%16;
+
+    for (int i = overlap_start; i < overlap_end; i++) {
+        matR[i] = matA[i] + matB[i];
+    }
+}
+
 void linear::matrix_mul(const float *matA, const float *matB, float *matR) {
     // TODO two versions - cpu cache-unfriendly + friendly
     for (int y = 0; y < MATRIX_SIZE; y++) {
@@ -104,11 +121,11 @@ void reset_result(float *matR) {
 
 int main() {
     // init matrix
-    alignas(32) float matA[MATRIX_SIZE_FULL];
-    alignas(32) float matB[MATRIX_SIZE_FULL];
-    alignas(32) float matBT[MATRIX_SIZE_FULL];
-    alignas(32) float matRf[MATRIX_SIZE_FULL];
-    alignas(32) float matR[MATRIX_SIZE_FULL];
+    alignas(64) float matA[MATRIX_SIZE_FULL];
+    alignas(64) float matB[MATRIX_SIZE_FULL];
+    alignas(64) float matBT[MATRIX_SIZE_FULL];
+    alignas(64) float matRf[MATRIX_SIZE_FULL];
+    alignas(64) float matR[MATRIX_SIZE_FULL];
 
     // fill matrices
     // TODO cache-friendly?
@@ -159,6 +176,15 @@ int main() {
         }
     }
 
+    reset_result(matR);
+    avx512::vector_add(matA, matB, matR);
+    bool ok_avx512 = true;
+    for (int i = 0; ok_avx512 && i < MATRIX_SIZE_FULL; i++) {
+        if (abs(matR[i] - matRf[i]) > 0.001) {
+            ok_avx512 = false;
+            std::cout << "AVX512: wrong result" << std::endl << std::endl;
+        }
+    }
 
     // BENCHMARK
     std::cout << std::endl;
@@ -170,7 +196,7 @@ int main() {
 
     auto e = std::chrono::high_resolution_clock::now();
     auto t = std::chrono::duration_cast<std::chrono::microseconds>(e - s);
-    std::cout << "Scalar execution time: " << t.count() << " µs" << std::endl;
+    std::cout << "Scalar execution time: \t" << t.count() << " µs" << std::endl;
 
     s = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < TEST_ITERATIONS; i++) {
@@ -179,7 +205,7 @@ int main() {
 
     e = std::chrono::high_resolution_clock::now();
     t = std::chrono::duration_cast<std::chrono::microseconds>(e - s);
-    std::cout << "SSE execution time: " << t.count() << " µs" << std::endl;
+    std::cout << "SSE execution time: \t" << t.count() << " µs" << std::endl;
 
     s = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < TEST_ITERATIONS; i++) {
@@ -188,5 +214,14 @@ int main() {
 
     e = std::chrono::high_resolution_clock::now();
     t = std::chrono::duration_cast<std::chrono::microseconds>(e - s);
-    std::cout << "AVX execution time: " << t.count() << " µs" << std::endl;
+    std::cout << "AVX execution time: \t" << t.count() << " µs" << std::endl;
+    
+    s = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < TEST_ITERATIONS; i++) {
+        avx512::vector_add(matA, matB, matR);
+    }
+
+    e = std::chrono::high_resolution_clock::now();
+    t = std::chrono::duration_cast<std::chrono::microseconds>(e - s);
+    std::cout << "AVX512 execution time: \t" << t.count() << " µs" << std::endl;
 }
