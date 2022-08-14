@@ -6,6 +6,18 @@
 
 #include "avx_ex.h"
 
+#ifdef _WIN32
+//  Windows
+#define cpuid(info, x)    __cpuidex(info, x, 0)
+#else
+//  GCC Intrinsics
+#include <cpuid.h>
+void cpuid(int info[4], int InfoType){
+    __cpuid_count(InfoType, 0, info[0], info[1], info[2], info[3]);
+}
+#endif
+
+
 // https://stackoverflow.com/questions/23189488/horizontal-sum-of-32-bit-floats-in-256-bit-avx-vector
 #define _mm256_full_hadd_ps(v0, v1) \
         _mm256_hadd_ps(_mm256_permute2f128_ps(v0, v1, 0x20), \
@@ -17,6 +29,11 @@
 #define AVX512_WIDTH_FLOAT AVX_WIDTH_FLOAT*2
 #define MATRIX_SIZE (1*AVX512_WIDTH_FLOAT)
 #define MATRIX_SIZE_FULL MATRIX_SIZE*MATRIX_SIZE
+
+bool HW_SSE;
+bool HW_AVX;
+bool HW_AVX2;
+bool HW_AVX512F;
 
 // https://www.appsloveworld.com/cplus/100/359/horizontal-sum-of-32-bit-floats-in-256-bit-avx-vector
 static inline float _mm256_reduce_add_ps(__m256 x) {
@@ -30,13 +47,19 @@ static inline float _mm256_reduce_add_ps(__m256 x) {
     return _mm_cvtss_f32(x32);
 }
 
-void linear::vector_add(const float *matA, const float *matB, float *matR) {
+bool linear::vector_add(const float *matA, const float *matB, float *matR) {
     for (size_t i = 0; i < MATRIX_SIZE_FULL; i++) {
         matR[i] = matA[i] + matB[i];
     }
+
+    return true;
 }
 
-void sse::vector_add(const float *matA, const float *matB, float *matR) {
+bool sse::vector_add(const float *matA, const float *matB, float *matR) {
+    if (!HW_SSE) {
+        return false;
+    }
+
     for (int i = 0; i < (int)(MATRIX_SIZE_FULL/4); i++) {
         __m128 a = _mm_load_ps(&matA[i*4]);
         __m128 b = _mm_load_ps(&matB[i*4]);
@@ -50,9 +73,15 @@ void sse::vector_add(const float *matA, const float *matB, float *matR) {
     for (int i = overlap_start; i < overlap_end; i++) {
         matR[i] = matA[i] + matB[i];
     }
+
+    return true;
 }
 
-void avx::vector_add(const float *matA, const float *matB, float *matR) {
+bool avx::vector_add(const float *matA, const float *matB, float *matR) {
+    if (!HW_AVX) {
+        return false;
+    }
+
     for (int i = 0; i < (int)(MATRIX_SIZE_FULL/8); i++) {
         __m256 a = _mm256_load_ps(&matA[i*8]);
         __m256 b = _mm256_load_ps(&matB[i*8]);
@@ -66,9 +95,16 @@ void avx::vector_add(const float *matA, const float *matB, float *matR) {
     for (int i = overlap_start; i < overlap_end; i++) {
         matR[i] = matA[i] + matB[i];
     }
+
+    return true;
 }
 
-void avx512::vector_add(const float *matA, const float *matB, float *matR) {
+/*
+bool avx512::vector_add(const float *matA, const float *matB, float *matR) {
+    if (HW_AVX512F) {
+        return false;
+    }
+
     for (int i = 0; i < (int)(MATRIX_SIZE_FULL/16); i++) {
         __m512 a = _mm512_load_ps(&matA[i*16]);
         __m512 b = _mm512_load_ps(&matB[i*16]);
@@ -82,9 +118,12 @@ void avx512::vector_add(const float *matA, const float *matB, float *matR) {
     for (int i = overlap_start; i < overlap_end; i++) {
         matR[i] = matA[i] + matB[i];
     }
-}
 
-void linear::matrix_mul(const float *matA, const float *matB, float *matR) {
+    return true;
+}
+*/
+
+bool linear::matrix_mul(const float *matA, const float *matB, float *matR) {
     // TODO two versions - cpu cache-unfriendly + friendly
     for (int y = 0; y < MATRIX_SIZE; y++) {
         for (int x = 0; x < MATRIX_SIZE; x++) {
@@ -97,9 +136,15 @@ void linear::matrix_mul(const float *matA, const float *matB, float *matR) {
             matR[y*MATRIX_SIZE+x] = num;
         }
     }
+
+    return true;
 }
 
-void avx::matrix_mul(const float *matA, const float *matB, float *matR) {
+bool avx::matrix_mul(const float *matA, const float *matB, float *matR) {
+    if (!HW_AVX) {
+        return false;
+    }
+
     for (int y = 0; y < MATRIX_SIZE; y++) {
         for (int x = 0; x < MATRIX_SIZE; x++) {
             __m256 a = _mm256_load_ps(&matA[y*MATRIX_SIZE]);
@@ -109,6 +154,8 @@ void avx::matrix_mul(const float *matA, const float *matB, float *matR) {
             matR[y*MATRIX_SIZE+x] = _mm256_reduce_add_ps(r);
         }
     }
+
+    return true;
 }
 
 void reset_result(float *matR) {
@@ -120,6 +167,28 @@ void reset_result(float *matR) {
 }
 
 int main() {
+    //https://stackoverflow.com/questions/6121792/how-to-check-if-a-cpu-supports-the-sse3-instruction-set
+    //https://github.com/Mysticial/FeatureDetector
+    // check sse, avx and avx512f support
+    int info[4];
+    cpuid(info, 0);
+    int nIds = info[0];
+
+    cpuid(info, 0x80000000);
+    unsigned nExIds = info[0];
+
+    if (nIds >= 0x00000001){
+        cpuid(info,0x00000001);
+        HW_SSE = (info[3] & ((int)1 << 25)) != 0;
+        HW_AVX = (info[2] & ((int)1 << 28)) != 0;
+    }
+
+    if (nIds >= 0x00000007){
+        cpuid(info,0x00000007);
+        HW_AVX2    = (info[1] & ((int)1 <<  5)) != 0;
+        HW_AVX512F = (info[1] & ((int)1 << 16)) != 0;
+    }
+
     // init matrix
     alignas(64) float matA[MATRIX_SIZE_FULL];
     alignas(64) float matB[MATRIX_SIZE_FULL];
@@ -149,6 +218,7 @@ int main() {
     std::cout << std::endl;
     */
 
+
     sse::vector_add(matA, matB, matR);
     bool ok_sse = true;
     for (int i = 0; ok_sse && i < MATRIX_SIZE_FULL; i++) {
@@ -177,7 +247,7 @@ int main() {
     }
 
     reset_result(matR);
-    avx512::vector_add(matA, matB, matR);
+    //avx512::vector_add(matA, matB, matR);
     bool ok_avx512 = true;
     for (int i = 0; ok_avx512 && i < MATRIX_SIZE_FULL; i++) {
         if (abs(matR[i] - matRf[i]) > 0.001) {
@@ -218,7 +288,7 @@ int main() {
     
     s = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < TEST_ITERATIONS; i++) {
-        avx512::vector_add(matA, matB, matR);
+        //avx512::vector_add(matA, matB, matR);
     }
 
     e = std::chrono::high_resolution_clock::now();
