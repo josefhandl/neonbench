@@ -65,6 +65,56 @@ void reset_result_matrix(float *matR) {
     }
 }
 
+bool check_vm()
+{
+    // https://stackoverflow.com/questions/41750144/c-how-to-detect-the-virtual-machine-your-application-is-running-in-has-focus
+    int cpuInfo[4] = {};
+
+    //
+    // Upon execution, code should check bit 31 of register ECX
+    // (the “hypervisor present bit”). If this bit is set, a hypervisor is present.
+    // In a non-virtualized environment, the bit will be clear.
+    //
+    cpuid(cpuInfo, 1);
+    
+
+    if (!(cpuInfo[2] & (1 << 31)))
+        return false;
+    
+    //
+    // A hypervisor is running on the machine. Query the vendor id.
+    //
+    const auto queryVendorIdMagic = 0x40000000;
+    cpuid(cpuInfo, queryVendorIdMagic);
+
+    const int vendorIdLength = 13;
+    using VendorIdStr = char[vendorIdLength];
+
+    VendorIdStr hyperVendorId = {};
+    
+    memcpy(hyperVendorId + 0, &cpuInfo[1], 4);
+    memcpy(hyperVendorId + 4, &cpuInfo[2], 4);
+    memcpy(hyperVendorId + 8, &cpuInfo[3], 4);
+    hyperVendorId[12] = '\0';
+
+    static const VendorIdStr vendors[]{
+    "KVMKVMKVM\0\0\0", // KVM 
+    "Microsoft Hv",    // Microsoft Hyper-V or Windows Virtual PC */
+    "VMwareVMware",    // VMware 
+    "XenVMMXenVMM",    // Xen 
+    "prl hyperv  ",    // Parallels
+    "VBoxVBoxVBox"     // VirtualBox 
+    };
+
+    for (const auto& vendor : vendors)
+    {
+        if (!memcmp(vendor, hyperVendorId, vendorIdLength))
+            return true;
+    }
+
+    return false;
+}
+
 void get_cpu_info() {
     // https://stackoverflow.com/questions/850774/how-to-determine-the-hardware-cpu-and-ram-on-a-machine
     // Linux only
@@ -95,6 +145,7 @@ void get_cpu_info() {
     std::cout << "------------------------" << std::endl;
     std::cout << "CPU: " << CPUBrandString << std::endl;
     std::cout << "Cores: " << numCPU << std::endl;
+    std::cout << "Virtual Machine: " << (check_vm() ? "True" : "False") << std::endl;
     std::cout << std::endl;
     std::cout << "Benchmark:" << std::endl;
     std::cout << "------------------------" << std::endl;
