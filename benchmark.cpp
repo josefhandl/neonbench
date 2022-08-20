@@ -3,6 +3,8 @@
 #include <vector>
 #include <iostream>
 #include <dlfcn.h> // runtime library loading
+#include <string.h> // memory
+#include <unistd.h> // cpu cores
 
 #ifdef _WIN32
 //  Windows
@@ -63,7 +65,42 @@ void reset_result_matrix(float *matR) {
     }
 }
 
-void check_cpu_inst_set() {
+void get_cpu_info() {
+    // https://stackoverflow.com/questions/850774/how-to-determine-the-hardware-cpu-and-ram-on-a-machine
+    // Linux only
+    char CPUBrandString[0x40];
+    unsigned int CPUInfo[4] = {0,0,0,0};
+
+    __cpuid(0x80000000, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+    unsigned int nExIds = CPUInfo[0];
+
+    memset(CPUBrandString, 0, sizeof(CPUBrandString));
+
+    for (unsigned int i = 0x80000000; i <= nExIds; ++i)
+    {
+        __cpuid(i, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+
+        if (i == 0x80000002)
+            memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
+        else if (i == 0x80000003)
+            memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
+        else if (i == 0x80000004)
+            memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
+    }
+
+    // https://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine
+    int numCPU = sysconf(_SC_NPROCESSORS_ONLN);
+
+    std::cout << "System Info:" << std::endl;
+    std::cout << "------------------------" << std::endl;
+    std::cout << "CPU: " << CPUBrandString << std::endl;
+    std::cout << "Cores: " << numCPU << std::endl;
+    std::cout << std::endl;
+    std::cout << "Benchmark:" << std::endl;
+    std::cout << "------------------------" << std::endl;
+}
+
+void get_cpu_inst_set() {
     //https://stackoverflow.com/questions/6121792/how-to-check-if-a-cpu-supports-the-sse3-instruction-set
     //https://github.com/Mysticial/FeatureDetector
     // check sse, avx and avx512f support
@@ -141,7 +178,9 @@ int main() {
 
     init_matrices();
 
-    check_cpu_inst_set();
+    get_cpu_info();
+
+    get_cpu_inst_set();
 
     // Scalar
     //---------
