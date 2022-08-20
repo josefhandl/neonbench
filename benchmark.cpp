@@ -65,8 +65,7 @@ void reset_result_matrix(float *matR) {
     }
 }
 
-bool check_vm()
-{
+bool check_vm(std::string *vmName) {
     // https://stackoverflow.com/questions/41750144/c-how-to-detect-the-virtual-machine-your-application-is-running-in-has-focus
     int cpuInfo[4] = {};
 
@@ -108,8 +107,10 @@ bool check_vm()
 
     for (const auto& vendor : vendors)
     {
-        if (!memcmp(vendor, hyperVendorId, vendorIdLength))
+        if (!memcmp(vendor, hyperVendorId, vendorIdLength)) {
+            *vmName = std::string(vendor);
             return true;
+        }
     }
 
     return false;
@@ -145,7 +146,9 @@ void get_cpu_info() {
     std::cout << "------------------------" << std::endl;
     std::cout << "CPU: " << CPUBrandString << std::endl;
     std::cout << "Cores: " << numCPU << std::endl;
-    std::cout << "Virtual Machine: " << (check_vm() ? "True" : "False") << std::endl;
+    std::string vmName;
+    bool vmPresence = check_vm(&vmName);
+    std::cout << "Virtual Machine: " << (vmPresence ? vmName : "False") << std::endl;
     std::cout << std::endl;
     std::cout << "Benchmark:" << std::endl;
     std::cout << "------------------------" << std::endl;
