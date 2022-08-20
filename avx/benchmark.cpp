@@ -156,33 +156,38 @@ int main() {
     // Windows
     // LoadLibrary() / LoadLibraryEX()
     // GetProcAddress()
-    // FreeLibrary
+    // FreeLibrary()
+
+    // Linux
+    // lib.so
+
+    // MacOS
+    // lib.dylib
+
+    // Windows
+    // lib.dll
 
 
-    void* handle = dlopen("./sse.so", RTLD_NOW); // RTLD_LAZY
+    void *handle = dlopen("./sse.so", RTLD_LAZY); // RTLD_NOW
     if (handle == NULL){
         std::cerr << dlerror() << std::endl;
         exit(-1);
     }
 
-    Computation* (*create)();
-    void (*destroy)(Computation*);
+    bool (*vector_add) (const size_t matSize, const float *matA, const float *matB, float *matR);
 
-    //Computation *create = static_cast<Computation *()>(dlsym(handle, "create_object"))();
-    create = (Computation* (*)())dlsym(handle, "create_object");
-    destroy = (void (*)(Computation*))dlsym(handle, "destroy_object");
+    vector_add = (bool (*)(const size_t matSize, const float *matA, const float *matB, float *matR))dlsym(handle, "vector_add");
 
-    if (create == NULL){
+    if (vector_add == NULL){
         std::cerr << dlerror() << std::endl;
-        exit(-1);
+        exit(4);
     }
 
-    if (destroy == NULL){
-        std::cerr << dlerror() << std::endl;
-        exit(-1);
-    }
+    vector_add(MATRIX_SIZE_FULL, matA, matB, matRf);
 
-    Computation* computation = (Computation*)create();/*
+
+    dlclose(handle);
+    /*
     computation->vector_add(MATRIX_SIZE_FULL, matA, matB, matRf);
     destroy( computation );
 */

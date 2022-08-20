@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#g++ -msse -c -o sse.o sse.c
-g++ -msse -fPIC -shared sse.c -o sse.so
 
-g++ -ldl -mavx -o benchmark benchmark.cpp
+clang -Wall -Wextra -Werror -g -msse -fPIC -shared -o sse.so sse.c
+
+clang++ -Wall -Wextra -Werror -ldl -mavx -o benchmark benchmark.cpp
 
