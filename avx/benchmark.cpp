@@ -3,8 +3,12 @@
 #include <chrono>
 #include <vector>
 #include <iostream>
+#include <dlfcn.h> // runtime library loading
 
-#include "avx_ex.h"
+#include "benchmark.h"
+
+#include "computation.h"
+
 
 // https://stackoverflow.com/questions/23189488/horizontal-sum-of-32-bit-floats-in-256-bit-avx-vector
 #define _mm256_full_hadd_ps(v0, v1) \
@@ -68,6 +72,7 @@ void avx::vector_add(const float *matA, const float *matB, float *matR) {
     }
 }
 
+/*
 void avx512::vector_add(const float *matA, const float *matB, float *matR) {
     for (int i = 0; i < (int)(MATRIX_SIZE_FULL/16); i++) {
         __m512 a = _mm512_load_ps(&matA[i*16]);
@@ -83,6 +88,7 @@ void avx512::vector_add(const float *matA, const float *matB, float *matR) {
         matR[i] = matA[i] + matB[i];
     }
 }
+*/
 
 void linear::matrix_mul(const float *matA, const float *matB, float *matR) {
     // TODO two versions - cpu cache-unfriendly + friendly
@@ -120,6 +126,7 @@ void reset_result(float *matR) {
 }
 
 int main() {
+
     // init matrix
     alignas(64) float matA[MATRIX_SIZE_FULL];
     alignas(64) float matB[MATRIX_SIZE_FULL];
@@ -139,6 +146,51 @@ int main() {
         }
     }
 
+    // https://youtu.be/_kIa4D7kQ8I
+    
+    // Linux + MacOS
+    // dlopen()
+    // dlsym()
+    // dlclose()
+
+    // Windows
+    // LoadLibrary() / LoadLibraryEX()
+    // GetProcAddress()
+    // FreeLibrary
+
+
+    void* handle = dlopen("./sse.so", RTLD_NOW); // RTLD_LAZY
+    if (handle == NULL){
+        std::cerr << dlerror() << std::endl;
+        exit(-1);
+    }
+
+    Computation* (*create)();
+    void (*destroy)(Computation*);
+
+    //Computation *create = static_cast<Computation *()>(dlsym(handle, "create_object"))();
+    create = (Computation* (*)())dlsym(handle, "create_object");
+    destroy = (void (*)(Computation*))dlsym(handle, "destroy_object");
+
+    if (create == NULL){
+        std::cerr << dlerror() << std::endl;
+        exit(-1);
+    }
+
+    if (destroy == NULL){
+        std::cerr << dlerror() << std::endl;
+        exit(-1);
+    }
+
+    Computation* computation = (Computation*)create();/*
+    computation->vector_add(MATRIX_SIZE_FULL, matA, matB, matRf);
+    destroy( computation );
+*/
+/*
+    Computation computation();
+    dynamic_cast<SSE>(computation).vector_add(MATRIX_SIZE_FULL, matA, matB, matRf);*/
+
+    
     // TEST
     linear::vector_add(matA, matB, matRf);
 
@@ -177,7 +229,7 @@ int main() {
     }
 
     reset_result(matR);
-    avx512::vector_add(matA, matB, matR);
+    //avx512::vector_add(matA, matB, matR);
     bool ok_avx512 = true;
     for (int i = 0; ok_avx512 && i < MATRIX_SIZE_FULL; i++) {
         if (abs(matR[i] - matRf[i]) > 0.001) {
@@ -218,7 +270,7 @@ int main() {
     
     s = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < TEST_ITERATIONS; i++) {
-        avx512::vector_add(matA, matB, matR);
+        //avx512::vector_add(matA, matB, matR);
     }
 
     e = std::chrono::high_resolution_clock::now();
