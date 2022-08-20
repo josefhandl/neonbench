@@ -16,7 +16,7 @@ libs: $(LIBS)
 	$(CC) $(CFLAGS) -fPIC -shared -m$(patsubst %.so,%,$@) -o $@ $^
 
 benchmark: benchmark.cpp
-	$(CCPP) $(CFLAGS) -mavx -ldl -o $@ $^
+	$(CCPP) $(CFLAGS) -ldl -o $@ $^
 
 clean:
 	rm -f benchmark $(LIBS)
