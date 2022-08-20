@@ -174,9 +174,9 @@ int main() {
         exit(-1);
     }
 
-    bool (*vector_add) (const size_t matSize, const float *matA, const float *matB, float *matR);
+    void (*vector_add) (const size_t matSize, const float *matA, const float *matB, float *matR);
 
-    vector_add = (bool (*)(const size_t matSize, const float *matA, const float *matB, float *matR))dlsym(handle, "vector_add");
+    vector_add = (void (*)(const size_t matSize, const float *matA, const float *matB, float *matR))dlsym(handle, "vector_add");
 
     if (vector_add == NULL){
         std::cerr << dlerror() << std::endl;

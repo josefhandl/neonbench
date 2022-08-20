@@ -4,7 +4,7 @@ CCPP=clang++
 
 CFLAGS=-g -Wall -Wextra -Werror -pedantic
 
-LIBS=sse.so
+LIBS=sse.so avx.so avx512f.so
 
 .PHONY: all libs clean
 
