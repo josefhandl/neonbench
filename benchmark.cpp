@@ -5,6 +5,8 @@
 #include <dlfcn.h> // runtime library loading
 #include <string.h> // memory
 #include <unistd.h> // cpu cores
+#include <cmath>
+#include <sstream>
 
 #ifdef _WIN32
 //  Windows
@@ -114,6 +116,23 @@ bool check_vm(std::string *vmName) {
     }
 
     return false;
+}
+
+void compute_points(int64_t time, std::string *points) {
+    double p = (1.0 / ((double)time*pow(10, -6))) * MATRIX_SIZE_FULL * TEST_ITERATIONS;
+
+    std::stringstream ss;
+
+    if (p > pow(10, 10))
+        ss << (int)(p / pow(10, 9)) << " G";
+    else if (p > pow(10, 7))
+        ss << (int)(p / pow(10, 6)) << " M";
+    else if (p > pow(10, 4))
+        ss << (int)(p / pow(10, 3)) << " k";
+    else
+        ss << (int)p;
+
+    *points = ss.str();
 }
 
 void get_cpu_info() {
@@ -236,6 +255,8 @@ int main() {
 
     get_cpu_inst_set();
 
+    std::string points;
+
     // Scalar
     //---------
     auto s = std::chrono::high_resolution_clock::now();
@@ -244,32 +265,36 @@ int main() {
     }
     auto e = std::chrono::high_resolution_clock::now();
     auto t = std::chrono::duration_cast<std::chrono::microseconds>(e - s);
-    std::cout << "Scalar: " << t.count() << " µs" << std::endl;
+    compute_points(t.count(), &points);
+    std::cout << "Scalar: " << points << std::endl;
 
     // SSE
     //---------
     std::cout << "SSE:    ";
-    if (HW_SSE)
-        std::cout << make_benchmark("./sse.so") << " µs";
-    else
+    if (HW_SSE) {
+        compute_points(make_benchmark("./sse.so"), &points);
+        std::cout << points;
+    } else
         std::cout << "Not supported";
     std::cout << std::endl;
 
     // AVX
     //---------
     std::cout << "AVX:    ";
-    if (HW_AVX)
-        std::cout << make_benchmark("./avx.so") << " µs";
-    else
+    if (HW_AVX) {
+        compute_points(make_benchmark("./avx.so"), &points);
+        std::cout << points;
+    } else
         std::cout << "Not supported";
     std::cout << std::endl;
 
     // AVX512
     //---------
     std::cout << "AVX512: ";
-    if (HW_AVX512F)
-        std::cout << make_benchmark("./avx512f.so") << " µs";
-    else
+    if (HW_AVX512F) {
+        compute_points(make_benchmark("./avx512f.so"), &points);
+        std::cout << points;
+    } else
         std::cout << "Not supported";
     std::cout << std::endl;
 }
