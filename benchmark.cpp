@@ -1,5 +1,4 @@
 #include <cassert>
-#include <immintrin.h> // AVX + SSE4 header
 #include <chrono>
 #include <vector>
 #include <iostream>
