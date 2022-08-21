@@ -7,6 +7,7 @@
 #include <unistd.h> // cpu cores
 #include <cmath>
 #include <sstream>
+#include <sys/sysinfo.h> // get memory size
 
 #ifdef _WIN32
 //  Windows
@@ -118,21 +119,25 @@ bool check_vm(std::string *vmName) {
     return false;
 }
 
+void num_si_prefix(int64_t n, std::string *numStr) {
+    std::stringstream ss;
+
+    if (n > pow(10, 10))
+        ss << (int)(n / pow(10, 9)) << " G";
+    else if (n > pow(10, 7))
+        ss << (int)(n / pow(10, 6)) << " M";
+    else if (n > pow(10, 4))
+        ss << (int)(n / pow(10, 3)) << " k";
+    else
+        ss << (int)n;
+
+    *numStr = ss.str();
+}
+
 void compute_points(int64_t time, std::string *points) {
     double p = (1.0 / ((double)time*pow(10, -6))) * MATRIX_SIZE_FULL * TEST_ITERATIONS;
 
-    std::stringstream ss;
-
-    if (p > pow(10, 10))
-        ss << (int)(p / pow(10, 9)) << " G";
-    else if (p > pow(10, 7))
-        ss << (int)(p / pow(10, 6)) << " M";
-    else if (p > pow(10, 4))
-        ss << (int)(p / pow(10, 3)) << " k";
-    else
-        ss << (int)p;
-
-    *points = ss.str();
+    num_si_prefix(p, points);
 }
 
 void get_cpu_info() {
@@ -146,8 +151,7 @@ void get_cpu_info() {
 
     memset(CPUBrandString, 0, sizeof(CPUBrandString));
 
-    for (unsigned int i = 0x80000000; i <= nExIds; ++i)
-    {
+    for (unsigned int i = 0x80000000; i <= nExIds; ++i) {
         __cpuid(i, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
 
         if (i == 0x80000002)
@@ -161,10 +165,20 @@ void get_cpu_info() {
     // https://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine
     int numCPU = sysconf(_SC_NPROCESSORS_ONLN);
 
+    // https://stackoverflow.com/questions/349889/how-do-you-determine-the-amount-of-linux-system-ram-in-c
+    // https://stackoverflow.com/questions/43481494/total-ram-size-linux-sysinfo-vs-proc-meminfo
+    struct sysinfo sys_info;
+    int64_t totalRam = 0;
+    if (sysinfo(&sys_info) != -1)
+        totalRam = ((uint64_t) sys_info.totalram * sys_info.mem_unit);
+
     std::cout << "System Info:" << std::endl;
     std::cout << "------------------------" << std::endl;
     std::cout << "CPU: " << CPUBrandString << std::endl;
     std::cout << "Cores: " << numCPU << std::endl;
+    std::string totalRamStr;
+    num_si_prefix(totalRam, &totalRamStr);
+    std::cout << "Memory size: " << totalRamStr << "B" << std::endl;
     std::string vmName;
     bool vmPresence = check_vm(&vmName);
     std::cout << "Virtual Machine: " << (vmPresence ? vmName : "False") << std::endl;
