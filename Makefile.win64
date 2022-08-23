@@ -1,0 +1,24 @@
+
+CC=clang++.exe
+
+#CC=x86_64-w64-mingw32-gcc
+#CCPP=x86_64-w64-mingw32-g++
+
+CFLAGS=-Wall -Wextra -Werror -pedantic --target=x86_64-pc-win32
+
+LIBS=sse.dll avx.dll avx512f.dll
+
+.PHONY: all libs clean
+
+all: benchmark.exe libs
+
+libs: $(LIBS)
+
+%.dll: %.cpp
+	$(CC) $(CFLAGS) -shared -m$(patsubst %.dll,%,$@) -o $@ $^
+
+benchmark.exe: benchmark.cpp
+	$(CC) $(CFLAGS) -o $@ $^
+
+clean:
+	rm -f benchmark.exe $(LIBS)

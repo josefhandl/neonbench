@@ -1,7 +1,13 @@
 
 #include <immintrin.h> // AVX + SSE4 header
 
-void vector_add(const size_t matSize, const float *matA, const float *matB, float *matR) {
+#ifdef _WIN32
+#define WIN_DDL_EX __declspec(dllexport)
+#else
+#define WIN_DDL_EX
+#endif
+
+extern "C" WIN_DDL_EX void vector_add(const size_t matSize, const float *matA, const float *matB, float *matR) {
     for (int i = 0; i < (int)(matSize/8); i++) {
         __m256 a = _mm256_load_ps(&matA[i*8]);
         __m256 b = _mm256_load_ps(&matB[i*8]);

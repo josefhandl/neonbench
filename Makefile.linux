@@ -1,8 +1,7 @@
 
-CC=clang
-CCPP=clang++
+CC=clang++
 
-CFLAGS=-g -Wall -Wextra -Werror -pedantic
+CFLAGS=-g -Wall -Wextra -Werror -pedantic --target=x86_64-pc-linux -fdeclspec
 
 LIBS=sse.so avx.so avx512f.so
 
@@ -12,11 +11,11 @@ all: benchmark libs
 
 libs: $(LIBS)
 
-%.so: %.c
+%.so: %.cpp
 	$(CC) $(CFLAGS) -fPIC -shared -m$(patsubst %.so,%,$@) -o $@ $^
 
 benchmark: benchmark.cpp
-	$(CCPP) $(CFLAGS) -ldl -o $@ $^
+	$(CC) $(CFLAGS) -ldl -o $@ $^
 
 clean:
 	rm -f benchmark $(LIBS)

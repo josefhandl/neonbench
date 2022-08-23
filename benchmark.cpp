@@ -1,29 +1,53 @@
-#include <cassert>
 #include <chrono>
 #include <vector>
 #include <iostream>
-#include <dlfcn.h> // runtime library loading
 #include <string.h> // memory
-#include <unistd.h> // cpu cores
 #include <cmath>
 #include <sstream>
-#include <sys/sysinfo.h> // get memory size
 
-#ifdef _WIN32
-//  Windows
-#define cpuid(info, x)    __cpuidex(info, x, 0)
-#else
-//  GCC Intrinsics
-#include <cpuid.h>
-void cpuid(int info[4], int InfoType){
-    __cpuid_count(InfoType, 0, info[0], info[1], info[2], info[3]);
-}
+#ifndef _WIN32 // NOT
+    #include <unistd.h> // cpu cores
+    #include <sys/sysinfo.h> // get memory size
 #endif
 
-bool HW_SSE;
-bool HW_AVX;
-bool HW_AVX2;
-bool HW_AVX512F;
+#ifdef _WIN32
+    #define LIB_SSE "sse.dll"
+    #define LIB_AVX "avx.dll"
+    #define LIB_AVX512 "avx512.dll"
+#else
+    #define LIB_SSE "./sse.so"
+    #define LIB_AVX "./avx.so"
+    #define LIB_AVX512 "./avx512.so"
+#endif
+
+// runtime library loading
+#ifdef _WIN32
+    #include <windows.h>
+    #include <stdio.h>
+#else
+    #include <dlfcn.h>
+#endif
+
+#ifdef _WIN32
+    //  Windows
+    #include <intrin.h>
+    void cpuid(int info[4], int x) {
+        //__cpuidex(info, x, 0);
+        __cpuid(info, x);
+    }
+    //#define cpuid(info, x)    __cpuidex(info, x, 0)
+#else
+    //  GCC Intrinsics
+    #include <cpuid.h>
+    void cpuid(int info[4], int InfoType) {
+        __cpuid_count(InfoType, 0, info[0], info[1], info[2], info[3]);
+    }
+#endif
+
+bool HW_SSE = true;
+bool HW_AVX = false;
+bool HW_AVX2 = false;
+bool HW_AVX512F = false;
 
 #define TEST_ITERATIONS 16384*8
 #define MAX_RAND_NUM 16u
@@ -142,17 +166,16 @@ void compute_points(int64_t time, std::string *points) {
 
 void get_cpu_info() {
     // https://stackoverflow.com/questions/850774/how-to-determine-the-hardware-cpu-and-ram-on-a-machine
-    // Linux only
     char CPUBrandString[0x40];
-    unsigned int CPUInfo[4] = {0,0,0,0};
+    int CPUInfo[4] = {0,0,0,0};
 
-    __cpuid(0x80000000, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+    cpuid(CPUInfo, 0x80000000);
     unsigned int nExIds = CPUInfo[0];
 
     memset(CPUBrandString, 0, sizeof(CPUBrandString));
 
     for (unsigned int i = 0x80000000; i <= nExIds; ++i) {
-        __cpuid(i, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+        cpuid(CPUInfo, i);
 
         if (i == 0x80000002)
             memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
@@ -163,14 +186,26 @@ void get_cpu_info() {
     }
 
     // https://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine
+    #ifdef _WIN32
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    int numCPU = sysinfo.dwNumberOfProcessors;
+    #else
     int numCPU = sysconf(_SC_NPROCESSORS_ONLN);
+    #endif
 
     // https://stackoverflow.com/questions/349889/how-do-you-determine-the-amount-of-linux-system-ram-in-c
     // https://stackoverflow.com/questions/43481494/total-ram-size-linux-sysinfo-vs-proc-meminfo
+    #ifdef _WIN32
+    unsigned long long totalRam;
+    GetPhysicallyInstalledSystemMemory(&totalRam);
+    totalRam *= 1024;
+    #else
     struct sysinfo sys_info;
     int64_t totalRam = 0;
     if (sysinfo(&sys_info) != -1)
         totalRam = ((uint64_t) sys_info.totalram * sys_info.mem_unit);
+    #endif
 
     std::cout << "System Info:" << std::endl;
     std::cout << "------------------------" << std::endl;
@@ -233,19 +268,35 @@ int64_t make_benchmark(const char *libName) {
     // Windows
     // lib.dll
 
-    void *handle = dlopen(libName, RTLD_LAZY); // RTLD_NOW
-    if (handle == NULL){
-        std::cerr << dlerror() << std::endl;
-        exit(-1);
-    }
+    #ifdef _WIN32
+        HINSTANCE handle = LoadLibrary(TEXT(libName));
+        if (handle == NULL) {
+            perror("Could not load the dynamic library");
+            exit(-1);
+        }
+    #else
+        void *handle = dlopen(libName, RTLD_LAZY); // RTLD_NOW
+        if (handle == NULL) {
+            std::cerr << dlerror() << std::endl;
+            exit(-1);
+        }
+    #endif
 
+    #ifdef _WIN32
+        typedef void (*VADD) (const size_t, const float*, const float*, float*);
+        VADD vector_add = (VADD)GetProcAddress(handle, "vector_add");
+        if (vector_add == NULL) {
+            perror("Could not locate the function in the library");
+            exit(-2);
+        }
+    #else
     void (*vector_add) (const size_t, const float*, const float*, float*);
-    vector_add = (void (*)(const size_t, const float*, const float*, float*))dlsym(handle, "vector_add");
-
-    if (vector_add == NULL){
-        std::cerr << dlerror() << std::endl;
-        exit(-2);
-    }
+        vector_add = (void (*)(const size_t, const float*, const float*, float*))dlsym(handle, "vector_add");
+        if (vector_add == NULL) {
+            std::cerr << dlerror() << std::endl;
+            exit(-2);
+        }
+    #endif
 
     auto s = std::chrono::high_resolution_clock::now();
 
@@ -256,7 +307,11 @@ int64_t make_benchmark(const char *libName) {
     auto e = std::chrono::high_resolution_clock::now();
     auto t = std::chrono::duration_cast<std::chrono::microseconds>(e - s);
 
-    dlclose(handle);
+    #ifdef _WIN32
+        FreeLibrary(handle);
+    #else
+        dlclose(handle);
+    #endif
 
     return t.count();
 }
@@ -286,7 +341,7 @@ int main() {
     //---------
     std::cout << "SSE:    ";
     if (HW_SSE) {
-        compute_points(make_benchmark("./sse.so"), &points);
+        compute_points(make_benchmark(LIB_SSE), &points);
         std::cout << points;
     } else
         std::cout << "Not supported";
@@ -296,7 +351,7 @@ int main() {
     //---------
     std::cout << "AVX:    ";
     if (HW_AVX) {
-        compute_points(make_benchmark("./avx.so"), &points);
+        compute_points(make_benchmark(LIB_AVX), &points);
         std::cout << points;
     } else
         std::cout << "Not supported";
@@ -306,7 +361,7 @@ int main() {
     //---------
     std::cout << "AVX512: ";
     if (HW_AVX512F) {
-        compute_points(make_benchmark("./avx512f.so"), &points);
+        compute_points(make_benchmark(LIB_AVX512), &points);
         std::cout << points;
     } else
         std::cout << "Not supported";
