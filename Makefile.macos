@@ -1,0 +1,21 @@
+
+CC=clang++
+
+CFLAGS=-std=c++14 -g -Wall -Wextra -Werror -pedantic --target=x86_64-apple-darwin
+
+LIBS=sse.dylib avx.dylib avx512f.dylib
+
+.PHONY: all libs clean
+
+all: benchmark libs
+
+libs: $(LIBS)
+
+%.dylib: %.cpp
+	$(CC) $(CFLAGS) -fPIC -shared -m$(patsubst %.dylib,%,$@) -o $@ $^
+
+benchmark: benchmark.cpp
+	$(CC) $(CFLAGS) -ldl -o $@ $^
+
+clean:
+	rm -f benchmark $(LIBS)

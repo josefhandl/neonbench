@@ -5,7 +5,11 @@
 #include <cmath>
 #include <sstream>
 
-#ifndef _WIN32 // NOT
+#ifdef _WIN32
+#elif __APPLE__
+    #include <unistd.h> // cpu cores
+    #include <sys/sysctl.h> // get memory size
+#else
     #include <unistd.h> // cpu cores
     #include <sys/sysinfo.h> // get memory size
 #endif
@@ -19,11 +23,15 @@
 #ifdef _WIN32
     #define LIB_SSE "sse.dll"
     #define LIB_AVX "avx.dll"
-    #define LIB_AVX512 "avx512.dll"
+    #define LIB_AVX512 "avx512f.dll"
+#elif __APPLE__
+    #define LIB_SSE "sse.dylib"
+    #define LIB_AVX "avx.dylib"
+    #define LIB_AVX512 "avx512f.dylib"
 #else
     #define LIB_SSE "./sse.so"
     #define LIB_AVX "./avx.so"
-    #define LIB_AVX512 "./avx512.so"
+    #define LIB_AVX512 "./avx512f.so"
 #endif
 
 // runtime library loading
@@ -50,7 +58,7 @@
     }
 #endif
 
-bool HW_SSE = true;
+bool HW_SSE = false;
 bool HW_AVX = false;
 bool HW_AVX2 = false;
 bool HW_AVX512F = false;
@@ -206,6 +214,14 @@ void get_cpu_info() {
     unsigned long long totalRam;
     GetPhysicallyInstalledSystemMemory(&totalRam);
     totalRam *= 1024;
+    #elif __APPLE__
+    int mib[2];
+    int64_t totalRam;
+    size_t length;
+    mib[0] = CTL_HW;
+    mib[1] = HW_MEMSIZE;
+    length = sizeof(int64_t);
+    sysctl(mib, 2, &totalRam, &length, NULL, 0);
     #else
     struct sysinfo sys_info;
     int64_t totalRam = 0;
