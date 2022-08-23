@@ -10,6 +10,12 @@
     #include <sys/sysinfo.h> // get memory size
 #endif
 
+// Get OS info
+#ifdef _WIN32
+#else
+    #include <sys/utsname.h>
+#endif
+
 #ifdef _WIN32
     #define LIB_SSE "sse.dll"
     #define LIB_AVX "avx.dll"
@@ -209,6 +215,21 @@ void get_cpu_info() {
 
     std::cout << "System Info:" << std::endl;
     std::cout << "------------------------" << std::endl;
+
+    // https://stackoverflow.com/questions/6315666/c-get-linux-distribution-name-version
+    // TODO - posix only
+    #ifdef _WIN32
+    #else
+        struct utsname osInfo;
+        uname(&osInfo);
+        std::cout << "OS: "
+                  << osInfo.sysname << " "
+                  << osInfo.nodename << " "
+                  << osInfo.release << " "
+                  << osInfo.version << " "
+                  << osInfo.machine << std::endl;
+    #endif
+
     std::cout << "CPU: " << CPUBrandString << std::endl;
     std::cout << "Cores: " << numCPU << std::endl;
     std::string totalRamStr;
