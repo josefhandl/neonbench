@@ -109,6 +109,7 @@ void reset_result_matrix(float *matR) {
 
 bool check_vm(std::string *vmName) {
     // https://stackoverflow.com/questions/41750144/c-how-to-detect-the-virtual-machine-your-application-is-running-in-has-focus
+    // https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwjGqfaIst_5AhXUtKQKHfjSAWoQFnoECAsQAQ&url=https%3A%2F%2Fwww.duo.uio.no%2Fbitstream%2Fhandle%2F10852%2F51631%2FThesis_Maghsoud.pdf%3Fsequence%3D1&usg=AOvVaw0wPR7iYvbNxC38M3SJ99_8
     int cpuInfo[4] = {};
 
     //
