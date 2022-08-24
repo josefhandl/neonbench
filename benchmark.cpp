@@ -4,6 +4,7 @@
 #include <string.h> // memory
 #include <cmath>
 #include <sstream>
+#include <map>
 
 #ifdef _WIN32
 #elif __APPLE__
@@ -137,19 +138,19 @@ bool check_vm(std::string *vmName) {
     memcpy(hyperVendorId + 8, &cpuInfo[3], 4);
     hyperVendorId[12] = '\0';
 
-    static const VendorIdStr vendors[]{
-    "KVMKVMKVM\0\0\0", // KVM 
-    "Microsoft Hv",    // Microsoft Hyper-V or Windows Virtual PC */
-    "VMwareVMware",    // VMware 
-    "XenVMMXenVMM",    // Xen 
-    "prl hyperv  ",    // Parallels
-    "VBoxVBoxVBox"     // VirtualBox 
+    const std::map<const char*, const char*> vendors {
+        { "KVMKVMKVM\0\0\0", "KVM" },
+        { "Microsoft Hv", "Microsoft Hyper-V or Windows Virtual PC" },
+        { "VMwareVMware", "VMware" },
+        { "XenVMMXenVMM", "Xen" },
+        { "prl hyperv  ", "Parallels" },
+        { "VBoxVBoxVBox", "VirtualBox" }
     };
 
     for (const auto& vendor : vendors)
     {
-        if (!memcmp(vendor, hyperVendorId, vendorIdLength)) {
-            *vmName = std::string(vendor);
+        if (!memcmp(vendor.first, hyperVendorId, vendorIdLength)) {
+            *vmName = std::string(vendor.second);
             return true;
         }
     }
