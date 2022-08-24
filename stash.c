@@ -1,4 +1,34 @@
 
+
+    // Get OS info
+    #ifdef _WIN32
+    #else
+        #include <sys/utsname.h>
+    #endif
+
+
+    std::cout << "System Info:" << std::endl;
+    std::cout << "------------------------" << std::endl;
+
+    // https://stackoverflow.com/questions/6315666/c-get-linux-distribution-name-version
+    // TODO - posix only
+    #ifdef _WIN32
+    #else
+        struct utsname osInfo;
+        uname(&osInfo);
+        std::cout << "OS: "
+                  << osInfo.sysname << " "
+                  << osInfo.nodename << " "
+                  << osInfo.release << " "
+                  << osInfo.version << " "
+                  << osInfo.machine << std::endl;
+    #endif
+
+
+
+
+
+
 // https://stackoverflow.com/questions/23189488/horizontal-sum-of-32-bit-floats-in-256-bit-avx-vector
 #define _mm256_full_hadd_ps(v0, v1) \
         _mm256_hadd_ps(_mm256_permute2f128_ps(v0, v1, 0x20), \

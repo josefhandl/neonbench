@@ -3,7 +3,7 @@ CC=clang++
 
 CFLAGS=-g -Wall -Wextra -Werror -pedantic --target=x86_64-pc-linux -fdeclspec
 
-LIBS=sse.so avx.so avx512f.so
+LIBS=cpu/sse.so cpu/avx.so cpu/avx512f.so
 
 .PHONY: all libs clean
 
@@ -12,7 +12,7 @@ all: benchmark libs
 libs: $(LIBS)
 
 %.so: %.cpp
-	$(CC) $(CFLAGS) -fPIC -shared -m$(patsubst %.so,%,$@) -o $@ $^
+	$(CC) $(CFLAGS) -fPIC -shared -m$(patsubst cpu/%.so,%,$@) -o $@ $^
 
 benchmark: benchmark.cpp
 	$(CC) $(CFLAGS) -ldl -o $@ $^
