@@ -207,7 +207,7 @@ public:
 
     void printInfo() {
         std::cout << "CPU info:" << std::endl;
-        std::cout << "------------------------" << std::endl;
+        std::cout << "--------------------------------------" << std::endl;
         std::cout << "CPU Name: " << cpuName << std::endl;
         std::cout << "CPUs (threads): " << cpuCores << std::endl;
 
@@ -228,7 +228,7 @@ public:
     void benchmark(unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR) {
 
     std::cout << "CPU Benchmark:" << std::endl;
-    std::cout << "------------------------" << std::endl;
+    std::cout << "--------------------------------------" << std::endl;
 
     std::string points;
 

@@ -15,7 +15,7 @@ libs: $(LIBS)
 	$(CC) $(CFLAGS) -fPIC -shared -m$(patsubst cpu/%.so,%,$@) -o $@ $^
 
 benchmark: benchmark.cpp
-	$(CC) $(CFLAGS) -ldl -o $@ $^
+	$(CC) $(CFLAGS) -ldl -lOpenCL -o $@ $^
 
 clean:
 	rm -f benchmark $(LIBS)

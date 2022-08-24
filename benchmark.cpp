@@ -1,6 +1,6 @@
 
-
 #include "cpu/cpu.hpp"
+#include "opencl/opencl.hpp"
 
 #define TEST_ITERATIONS 16384*8
 #define MAX_RAND_NUM 16u
@@ -43,7 +43,13 @@ int main() {
     init_matrices();
 
     ModuleCpu moduleCpu;
+    ModuleOpencl moduleOpencl;
+
     moduleCpu.inspect();
+
     moduleCpu.printInfo();
+    moduleOpencl.printInfo();
+
     moduleCpu.benchmark(MATRIX_SIZE_FULL, TEST_ITERATIONS, matA, matB, matR);
+
 }
