@@ -51,5 +51,5 @@ int main() {
     moduleOpencl.printInfo();
 
     moduleCpu.benchmark(MATRIX_SIZE_FULL, TEST_ITERATIONS, matA, matB, matR);
-
+    moduleOpencl.benchmark(MATRIX_SIZE_FULL, TEST_ITERATIONS, matA, matB, matR);
 }
