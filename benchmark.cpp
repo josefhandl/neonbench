@@ -210,6 +210,7 @@ void get_cpu_info() {
 
     // https://stackoverflow.com/questions/349889/how-do-you-determine-the-amount-of-linux-system-ram-in-c
     // https://stackoverflow.com/questions/43481494/total-ram-size-linux-sysinfo-vs-proc-meminfo
+    // https://ideone.com/RuHMUK
     #ifdef _WIN32
     unsigned long long totalRam;
     GetPhysicallyInstalledSystemMemory(&totalRam);
