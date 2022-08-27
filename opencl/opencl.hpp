@@ -1,8 +1,12 @@
 
 #include <iostream>
 #include <vector>
+#include <fstream>
 
 #include <CL/opencl.hpp>
+
+#define KERNEL_FILE "opencl/kernel.cl"
+#define KERNEL_FUNCTION "vector_add"
 
 #define CL_HPP_ENABLE_EXCEPTIONS
 #define CL_HPP_TARGET_OPENCL_VERSION 300
@@ -19,15 +23,11 @@ private:
         cl::Context context({device});
         cl::CommandQueue queue(context, device);
 
-        std::string kernel_code =
-            "void kernel vector_add(global const unsigned *testIter, global const float *matA, global const float *matB, global float *matR) {"
-            "    for (unsigned i = 0; i < *testIter; ++i) {"
-            "        matR[get_global_id(0)] = matA[get_global_id(0)] + matB[get_global_id(0)];"
-            "    }"
-            "}";
+        std::ifstream kernelFile(KERNEL_FILE);
+        std::string kernelCode((std::istreambuf_iterator<char>(kernelFile)), std::istreambuf_iterator<char>());
 
         cl::Program::Sources sources;
-        sources.push_back({ kernel_code.c_str(),kernel_code.length() });
+        sources.push_back({ kernelCode.c_str(),kernelCode.length() });
 
         cl::Program program(context, sources);
         if(program.build({device})!=CL_SUCCESS){
@@ -35,7 +35,7 @@ private:
             exit(1);
         }
 
-        cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer, cl::Buffer> vector_add(cl::Kernel(program, "vector_add"));
+        cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer, cl::Buffer> vector_add(cl::Kernel(program, KERNEL_FUNCTION));
         cl::NDRange global(matSize);
 
         auto s = std::chrono::high_resolution_clock::now();
