@@ -5,6 +5,8 @@
 #include <iostream>
 #include <chrono>
 
+#include "constants.hpp"
+
 // runtime library loading
 #ifdef _WIN32
     #include <windows.h>
@@ -32,6 +34,31 @@ void compute_points(unsigned matSize, unsigned testIter, int64_t time, std::stri
     double p = (1.0 / ((double)time*pow(10, -6))) * matSize * testIter;
 
     num_si_prefix(p, points);
+}
+
+void reset_result_matrix(float *matR) {
+    for (int y = 0; y < MATRIX_SIZE; y++) {
+        for (int x = 0; x < MATRIX_SIZE; x++) {
+            matR[y*MATRIX_SIZE+x] = 0;
+        }
+    }
+}
+
+bool test_benchmark(unsigned matSize, const float *matA, const float *matB, float *matR) {
+    alignas(64) float matRef[MATRIX_SIZE_FULL];
+    for (unsigned i = 0; i < matSize; i++) {
+        matRef[i] = matA[i] + matB[i];
+    }
+
+    for (unsigned i = 0; i < matSize; ++i) {
+        if (matR[i] != matRef[i]) {
+            reset_result_matrix(matR);
+            return false;
+        }
+    }
+
+    reset_result_matrix(matR);
+    return true;
 }
 
 int64_t make_benchmark(

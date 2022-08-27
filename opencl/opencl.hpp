@@ -126,7 +126,9 @@ public:
             std::cout << device.getInfo<CL_DEVICE_NAME>() << ": ";
             int64_t time = make_opencl_benchmark(device, matSize, testIter, matA, matB, matR);
             compute_points(matSize, testIter, time, &points);
-            std::cout << points << std::endl;
+
+            bool benchmark_ok = test_benchmark(matSize, matA, matB, matR);
+            std::cout << (benchmark_ok ? points : "Failed") << std::endl;
         }
     }
 };
