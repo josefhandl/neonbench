@@ -12,7 +12,7 @@ class ModuleOpencl {
 private:
     std::vector<cl::Device> cl_devices;
 
-    int64_t make_opencl_benchmark(cl::Device &device, unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR) {
+    int64_t make_opencl_benchmark(const cl::Device &device, unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR) {
         // https://raw.githubusercontent.com/ULHPC/tutorials/devel/gpu/opencl/slides.pdf
         // https://programmerclick.com/article/47811146604/
 
@@ -124,7 +124,7 @@ public:
 
         for (const cl::Device &device : cl_devices) {
             std::cout << device.getInfo<CL_DEVICE_NAME>() << ": ";
-            int64_t time = make_opencl_benchmark(cl_devices.front(), matSize, testIter, matA, matB, matR);
+            int64_t time = make_opencl_benchmark(device, matSize, testIter, matA, matB, matR);
             compute_points(matSize, testIter, time, &points);
             std::cout << points << std::endl;
         }
