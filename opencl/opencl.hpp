@@ -36,7 +36,8 @@ private:
         }
 
         cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer, cl::Buffer> vector_add(cl::Kernel(program, KERNEL_FUNCTION));
-        cl::NDRange global(matSize);
+        cl::NDRange ndRange(matSize);
+        //cl::NDRange workGroupSize(256);
 
         auto s = std::chrono::high_resolution_clock::now();
 
@@ -49,7 +50,8 @@ private:
         queue.enqueueWriteBuffer(cl_matA, CL_TRUE, 0, sizeof(float) * matSize, matA);
         queue.enqueueWriteBuffer(cl_matB, CL_TRUE, 0, sizeof(float) * matSize, matB);
 
-        vector_add(cl::EnqueueArgs(queue, global), cl_testIter, cl_matA, cl_matB, cl_matR).wait();
+        //vector_add(cl::EnqueueArgs(queue, ndRange, workGroupSize), cl_testIter, cl_matA, cl_matB, cl_matR).wait();
+        vector_add(cl::EnqueueArgs(queue, ndRange), cl_testIter, cl_matA, cl_matB, cl_matR).wait();
 
         queue.enqueueReadBuffer(cl_matR, CL_TRUE, 0, sizeof(float) * matSize, matR);
 
