@@ -3,19 +3,22 @@ CC=clang++
 
 CFLAGS=-g -Wall -Wextra -Werror -pedantic --target=x86_64-pc-linux -fdeclspec
 
-LIBS=cpu/sse.so cpu/avx.so cpu/avx512f.so
+LIBS_S=cpu/sse.so cpu/avx.so cpu/avx512f.so
 
 .PHONY: all libs clean
 
 all: benchmark libs
 
-libs: $(LIBS)
+libs: cpu/scalar.so $(LIBS_S)
+
+cpu/scalar.so: cpu/scalar.cpp
+	$(CC) $(CFLAGS) -fPIC -shared -o $@ $^
 
 %.so: %.cpp
 	$(CC) $(CFLAGS) -fPIC -shared -m$(patsubst cpu/%.so,%,$@) -o $@ $^
 
 benchmark: benchmark.cpp
-	$(CC) $(CFLAGS) -ldl -lOpenCL -o $@ $^
+	$(CC) $(CFLAGS) -ldl -fopenmp=libomp -lOpenCL -o $@ $^
 
 clean:
-	rm -f benchmark $(LIBS)
+	rm -f benchmark cpu/scalar.so $(LIBS_S)

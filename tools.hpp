@@ -4,6 +4,7 @@
 #include <math.h>
 #include <iostream>
 #include <chrono>
+#include <omp.h> // OpenMP
 
 #include "constants.hpp"
 
@@ -63,6 +64,7 @@ bool test_benchmark(unsigned matSize, const float *matA, const float *matB, floa
 
 int64_t make_benchmark(
         const char *libName,
+        bool parallel,
         unsigned matSize,
         unsigned testIter,
         const float *matA,
@@ -114,7 +116,7 @@ int64_t make_benchmark(
             exit(-2);
         }
     #elif __APPLE__ || __linux__
-    void (*vector_add) (const size_t, const float*, const float*, float*);
+        void (*vector_add) (const size_t, const float*, const float*, float*);
         vector_add = (void (*)(const size_t, const float*, const float*, float*))dlsym(handle, "vector_add");
         if (vector_add == NULL) {
             std::cerr << dlerror() << std::endl;
@@ -125,6 +127,7 @@ int64_t make_benchmark(
     // Make benchmark
     auto s = std::chrono::high_resolution_clock::now();
 
+    #pragma omp parallel for if (parallel)
     for (unsigned i = 0; i < testIter; i++) {
         vector_add(matSize, matA, matB, matR);
     }

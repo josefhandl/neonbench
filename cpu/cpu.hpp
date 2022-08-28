@@ -8,14 +8,17 @@
 #include "../tools.hpp"
 
 #ifdef _WIN32
+    #define LIB_SCALAR "scalar.dll"
     #define LIB_SSE "sse.dll"
     #define LIB_AVX "avx.dll"
     #define LIB_AVX512 "avx512f.dll"
 #elif __APPLE__
+    #define LIB_SCALAR "scalar.dylib"
     #define LIB_SSE "sse.dylib"
     #define LIB_AVX "avx.dylib"
     #define LIB_AVX512 "avx512f.dylib"
 #elif __linux__
+    #define LIB_SCALAR "./cpu/scalar.so"
     #define LIB_SSE "./cpu/sse.so"
     #define LIB_AVX "./cpu/avx.so"
     #define LIB_AVX512 "./cpu/avx512f.so"
@@ -190,12 +193,6 @@ private:
         }
     }
 
-    void vector_add_scalar(unsigned matSize, const float *matA, const float *matB, float *matR) {
-        for (unsigned i = 0; i < matSize; i++) {
-            matR[i] = matA[i] + matB[i];
-        }
-    }
-
 public:
     void inspect() {
         inspect_inst_sets();
@@ -230,28 +227,34 @@ public:
         std::cout << "--------------------------------------" << std::endl;
 
         std::string points;
+        bool benchmark_ok;
 
         // Scalar
         //---------
-        auto s = std::chrono::high_resolution_clock::now();
-        for (unsigned i = 0; i < testIter; i++) {
-            vector_add_scalar(matSize, matA, matB, matR);
-        }
-        auto e = std::chrono::high_resolution_clock::now();
-        auto t = std::chrono::duration_cast<std::chrono::microseconds>(e - s);
-        compute_points(matSize, testIter, t.count(), &points);
+        std::cout << "Scalar: ";
+        if (hw_sse) {
+            compute_points(matSize, testIter, make_benchmark(LIB_SCALAR, false, matSize, testIter, matA, matB, matR), &points);
+            benchmark_ok = test_benchmark(matSize, matA, matB, matR);
+            std::cout << (benchmark_ok ? points : "Failed") << "\t";
 
-        bool scalar_ok = test_benchmark(matSize, matA, matB, matR);
-        std::cout << "Scalar: " << (scalar_ok ? points : "Failed") << std::endl;
+            compute_points(matSize, testIter, make_benchmark(LIB_SCALAR, true, matSize, testIter, matA, matB, matR), &points);
+            benchmark_ok = test_benchmark(matSize, matA, matB, matR);
+            std::cout << (benchmark_ok ? points : "Failed");
+        } else
+            std::cout << "Not supported";
+        std::cout << std::endl;
 
         // SSE
         //---------
         std::cout << "SSE:    ";
         if (hw_sse) {
-            compute_points(matSize, testIter, make_benchmark(LIB_SSE, matSize, testIter, matA, matB, matR), &points);
+            compute_points(matSize, testIter, make_benchmark(LIB_SSE, false, matSize, testIter, matA, matB, matR), &points);
+            benchmark_ok = test_benchmark(matSize, matA, matB, matR);
+            std::cout << (benchmark_ok ? points : "Failed") << "\t";
 
-            bool sse_ok = test_benchmark(matSize, matA, matB, matR);
-            std::cout << (sse_ok ? points : "Failed");
+            compute_points(matSize, testIter, make_benchmark(LIB_SSE, true, matSize, testIter, matA, matB, matR), &points);
+            benchmark_ok = test_benchmark(matSize, matA, matB, matR);
+            std::cout << (benchmark_ok ? points : "Failed");
         } else
             std::cout << "Not supported";
         std::cout << std::endl;
@@ -260,10 +263,13 @@ public:
         //---------
         std::cout << "AVX:    ";
         if (hw_avx) {
-            compute_points(matSize, testIter, make_benchmark(LIB_AVX, matSize, testIter, matA, matB, matR), &points);
+            compute_points(matSize, testIter, make_benchmark(LIB_AVX, false, matSize, testIter, matA, matB, matR), &points);
+            benchmark_ok = test_benchmark(matSize, matA, matB, matR);
+            std::cout << (benchmark_ok ? points : "Failed") << "\t";
 
-            bool avx_ok = test_benchmark(matSize, matA, matB, matR);
-            std::cout << (avx_ok ? points : "Failed");
+            compute_points(matSize, testIter, make_benchmark(LIB_AVX, true, matSize, testIter, matA, matB, matR), &points);
+            benchmark_ok = test_benchmark(matSize, matA, matB, matR);
+            std::cout << (benchmark_ok ? points : "Failed");
         } else
             std::cout << "Not supported";
         std::cout << std::endl;
@@ -272,10 +278,13 @@ public:
         //---------
         std::cout << "AVX512: ";
         if (hw_avx512f) {
-            compute_points(matSize, testIter, make_benchmark(LIB_AVX512, matSize, testIter, matA, matB, matR), &points);
+            compute_points(matSize, testIter, make_benchmark(LIB_AVX512, false, matSize, testIter, matA, matB, matR), &points);
+            benchmark_ok = test_benchmark(matSize, matA, matB, matR);
+            std::cout << (benchmark_ok ? points : "Failed") << "\t";
 
-            bool avx512_ok = test_benchmark(matSize, matA, matB, matR);
-            std::cout << (avx512_ok ? points : "Failed");
+            compute_points(matSize, testIter, make_benchmark(LIB_AVX512, true, matSize, testIter, matA, matB, matR), &points);
+            benchmark_ok = test_benchmark(matSize, matA, matB, matR);
+            std::cout << (benchmark_ok ? points : "Failed");
         } else
             std::cout << "Not supported";
         std::cout << std::endl;
