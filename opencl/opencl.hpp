@@ -126,7 +126,11 @@ public:
 
         for (const cl::Device &device : cl_devices) {
             std::cout << device.getInfo<CL_DEVICE_NAME>() << ": ";
-            int64_t time = make_opencl_benchmark(device, matSize, testIter, matA, matB, matR);
+
+            int64_t time;
+            for (int i = 0; i < 4; ++i) {
+                time = make_opencl_benchmark(device, matSize, testIter, matA, matB, matR);
+            }
             compute_points(matSize, testIter, time, &points);
 
             bool benchmark_ok = test_benchmark(matSize, matA, matB, matR);
