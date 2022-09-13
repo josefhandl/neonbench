@@ -8,15 +8,15 @@
 #include "../tools.hpp"
 
 #ifdef _WIN32
-    #define LIB_SCALAR "scalar.dll"
-    #define LIB_SSE "sse.dll"
-    #define LIB_AVX "avx.dll"
-    #define LIB_AVX512 "avx512f.dll"
+    #define LIB_SCALAR "cpu/scalar.dll"
+    #define LIB_SSE "cpu/sse.dll"
+    #define LIB_AVX "cpu/avx.dll"
+    #define LIB_AVX512 "cpu/avx512f.dll"
 #elif __APPLE__
-    #define LIB_SCALAR "scalar.dylib"
-    #define LIB_SSE "sse.dylib"
-    #define LIB_AVX "avx.dylib"
-    #define LIB_AVX512 "avx512f.dylib"
+    #define LIB_SCALAR "./cpu/scalar.dylib"
+    #define LIB_SSE "./cpu/sse.dylib"
+    #define LIB_AVX "./cpu/avx.dylib"
+    #define LIB_AVX512 "./cpu/avx512f.dylib"
 #elif __linux__
     #define LIB_SCALAR "./cpu/scalar.so"
     #define LIB_SSE "./cpu/sse.so"

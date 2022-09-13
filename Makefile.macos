@@ -3,19 +3,22 @@ CC=clang++
 
 CFLAGS=-std=c++14 -g -Wall -Wextra -Werror -pedantic --target=x86_64-apple-darwin
 
-LIBS=sse.dylib avx.dylib avx512f.dylib
+LIBS_S=cpu/sse.dylib cpu/avx.dylib cpu/avx512f.dylib
 
 .PHONY: all libs clean
 
 all: benchmark libs
 
-libs: $(LIBS)
+libs: cpu/scalar.dylib $(LIBS_S)
+
+cpu/scalar.dylib: cpu/scalar.cpp
+	$(CC) $(CFLAGS) -fPIC -shared -o $@ $^
 
 %.dylib: %.cpp
-	$(CC) $(CFLAGS) -fPIC -shared -m$(patsubst %.dylib,%,$@) -o $@ $^
+	$(CC) $(CFLAGS) -fPIC -shared -m$(patsubst cpu/%.dylib,%,$@) -o $@ $^
 
 benchmark: benchmark.cpp
-	$(CC) $(CFLAGS) -ldl -o $@ $^
+	$(CC) $(CFLAGS) -ldl -Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include -lomp -o $@ $^
 
 clean:
-	rm -f benchmark $(LIBS)
+	rm -f benchmark cpu/scalar.dylib $(LIBS_S)

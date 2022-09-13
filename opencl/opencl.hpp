@@ -3,7 +3,13 @@
 #include <vector>
 #include <fstream>
 
-#include <CL/opencl.hpp>
+#ifdef _WIN32
+#elif __APPLE__
+    #include <OpenCL/opencl.hpp>
+#elif __linux__
+    #include <CL/opencl.hpp>
+#endif
+
 
 #define KERNEL_FILE "opencl/kernel.cl"
 #define KERNEL_FUNCTION "vector_add"
