@@ -233,11 +233,11 @@ public:
         //---------
         std::cout << "Scalar: ";
         if (hw_sse) {
-            compute_points(matSize, testIter, make_benchmark(LIB_SCALAR, false, matSize, testIter, matA, matB, matR), &points);
+            compute_points(matSize, testIter, make_benchmark(LIB_SCALAR, 1, matSize, testIter, matA, matB, matR), &points);
             benchmark_ok = test_benchmark(matSize, matA, matB, matR);
             std::cout << (benchmark_ok ? points : "Failed") << "\t";
 
-            compute_points(matSize, testIter, make_benchmark(LIB_SCALAR, true, matSize, testIter, matA, matB, matR), &points);
+            compute_points(matSize, testIter, make_benchmark(LIB_SCALAR, cpuCores, matSize, testIter, matA, matB, matR), &points);
             benchmark_ok = test_benchmark(matSize, matA, matB, matR);
             std::cout << (benchmark_ok ? points : "Failed");
         } else
@@ -248,11 +248,11 @@ public:
         //---------
         std::cout << "SSE:    ";
         if (hw_sse) {
-            compute_points(matSize, testIter, make_benchmark(LIB_SSE, false, matSize, testIter, matA, matB, matR), &points);
+            compute_points(matSize, testIter, make_benchmark(LIB_SSE, 1, matSize, testIter, matA, matB, matR), &points);
             benchmark_ok = test_benchmark(matSize, matA, matB, matR);
             std::cout << (benchmark_ok ? points : "Failed") << "\t";
 
-            compute_points(matSize, testIter, make_benchmark(LIB_SSE, true, matSize, testIter, matA, matB, matR), &points);
+            compute_points(matSize, testIter, make_benchmark(LIB_SSE, cpuCores, matSize, testIter, matA, matB, matR), &points);
             benchmark_ok = test_benchmark(matSize, matA, matB, matR);
             std::cout << (benchmark_ok ? points : "Failed");
         } else
@@ -263,11 +263,11 @@ public:
         //---------
         std::cout << "AVX:    ";
         if (hw_avx) {
-            compute_points(matSize, testIter, make_benchmark(LIB_AVX, false, matSize, testIter, matA, matB, matR), &points);
+            compute_points(matSize, testIter, make_benchmark(LIB_AVX, 1, matSize, testIter, matA, matB, matR), &points);
             benchmark_ok = test_benchmark(matSize, matA, matB, matR);
             std::cout << (benchmark_ok ? points : "Failed") << "\t";
 
-            compute_points(matSize, testIter, make_benchmark(LIB_AVX, true, matSize, testIter, matA, matB, matR), &points);
+            compute_points(matSize, testIter, make_benchmark(LIB_AVX, cpuCores, matSize, testIter, matA, matB, matR), &points);
             benchmark_ok = test_benchmark(matSize, matA, matB, matR);
             std::cout << (benchmark_ok ? points : "Failed");
         } else
@@ -278,11 +278,11 @@ public:
         //---------
         std::cout << "AVX512: ";
         if (hw_avx512f) {
-            compute_points(matSize, testIter, make_benchmark(LIB_AVX512, false, matSize, testIter, matA, matB, matR), &points);
+            compute_points(matSize, testIter, make_benchmark(LIB_AVX512, 1, matSize, testIter, matA, matB, matR), &points);
             benchmark_ok = test_benchmark(matSize, matA, matB, matR);
             std::cout << (benchmark_ok ? points : "Failed") << "\t";
 
-            compute_points(matSize, testIter, make_benchmark(LIB_AVX512, true, matSize, testIter, matA, matB, matR), &points);
+            compute_points(matSize, testIter, make_benchmark(LIB_AVX512, cpuCores, matSize, testIter, matA, matB, matR), &points);
             benchmark_ok = test_benchmark(matSize, matA, matB, matR);
             std::cout << (benchmark_ok ? points : "Failed");
         } else

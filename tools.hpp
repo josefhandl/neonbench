@@ -4,7 +4,9 @@
 #include <math.h>
 #include <iostream>
 #include <chrono>
-#include <omp.h> // OpenMP
+#include <vector>
+#include <thread>
+#include <algorithm>
 
 #include "constants.hpp"
 
@@ -14,6 +16,8 @@
     #include <stdio.h>
 #elif __APPLE__ || __linux__
     #include <dlfcn.h>
+
+    typedef void (*VECTOR_ADD) (const size_t, const float*, const float*, float*);
 #endif
 
 void num_si_prefix(int64_t n, std::string *numStr) {
@@ -62,9 +66,21 @@ bool test_benchmark(unsigned matSize, const float *matA, const float *matB, floa
     return true;
 }
 
+void make_benchmark_thread(
+        VECTOR_ADD vectorAdd,
+        unsigned matSize,
+        unsigned testIter,
+        const float *matA,
+        const float *matB,
+        float *matR) {
+    for (unsigned i = 0; i < testIter; i++) {
+        vectorAdd(matSize, matA, matB, matR);
+    }
+}
+
 int64_t make_benchmark(
         const char *libName,
-        bool parallel,
+        unsigned parallel,
         unsigned matSize,
         unsigned testIter,
         const float *matA,
@@ -109,15 +125,13 @@ int64_t make_benchmark(
 
     // Get vector_add function
     #ifdef _WIN32
-        typedef void (*VADD) (const size_t, const float*, const float*, float*);
-        VADD vector_add = (VADD)GetProcAddress(handle, "vector_add");
+        VECTOR_ADD vector_add = (VECTOR_ADD)GetProcAddress(handle, "vector_add");
         if (vector_add == NULL) {
             perror("Could not locate the function in the library");
             exit(-2);
         }
     #elif __APPLE__ || __linux__
-        void (*vector_add) (const size_t, const float*, const float*, float*);
-        vector_add = (void (*)(const size_t, const float*, const float*, float*))dlsym(handle, "vector_add");
+        VECTOR_ADD vector_add = (VECTOR_ADD)dlsym(handle, "vector_add");
         if (vector_add == NULL) {
             std::cerr << dlerror() << std::endl;
             exit(-2);
@@ -127,9 +141,16 @@ int64_t make_benchmark(
     // Make benchmark
     auto s = std::chrono::high_resolution_clock::now();
 
-    #pragma omp parallel for if (parallel)
-    for (unsigned i = 0; i < testIter; i++) {
-        vector_add(matSize, matA, matB, matR);
+    std::vector<std::thread> th(parallel);
+    for (unsigned i = 0; i < parallel; ++i) {
+        unsigned fragmentSize = ceil(matSize / parallel);
+        unsigned iStart = i * fragmentSize;
+        unsigned iSize = std::min((i+1)*fragmentSize, matSize) - iStart;
+        th[i] = std::thread(make_benchmark_thread, vector_add, iSize, testIter, &matA[iStart], &matB[iStart], &matR[iStart]);
+    }
+
+    for (unsigned i = 0; i < parallel; ++i) {
+        th[i].join();
     }
 
     auto e = std::chrono::high_resolution_clock::now();

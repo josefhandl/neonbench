@@ -1,7 +1,7 @@
 
 CC=clang++
 
-CFLAGS=-g -Wall -Wextra -Werror -pedantic --target=x86_64-pc-linux -fdeclspec
+CFLAGS=-std=c++14 -Wall -Wextra -pedantic --target=x86_64-pc-linux -fdeclspec
 
 LIBS_S=cpu/sse.so cpu/avx.so cpu/avx512f.so
 
@@ -18,7 +18,7 @@ cpu/scalar.so: cpu/scalar.cpp
 	$(CC) $(CFLAGS) -fPIC -shared -m$(patsubst cpu/%.so,%,$@) -o $@ $^
 
 benchmark: benchmark.cpp
-	$(CC) $(CFLAGS) -ldl -fopenmp=libomp -lOpenCL -o $@ $^
+	$(CC) $(CFLAGS) -ldl -lOpenCL -o $@ $^
 
 clean:
 	rm -f benchmark cpu/scalar.so $(LIBS_S)
