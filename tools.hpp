@@ -35,10 +35,11 @@ void num_si_prefix(int64_t n, std::string *numStr) {
     *numStr = ss.str();
 }
 
-void compute_points(unsigned matSize, unsigned testIter, int64_t time, std::string *points) {
+int64_t compute_points(unsigned matSize, unsigned testIter, int64_t time, std::string *points) {
     double p = (1.0 / ((double)time*pow(10, -6))) * matSize * testIter;
-
     num_si_prefix(p, points);
+
+    return p;
 }
 
 void reset_result_matrix(float *matR) {
