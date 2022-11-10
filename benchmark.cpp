@@ -1,7 +1,9 @@
 
 #include "constants.hpp"
+
 #include "cpu/cpu.hpp"
 #include "opencl/opencl.hpp"
+#include "cuda/cuda.hpp"
 
 // init matrices
 alignas(64) float matA[MATRIX_SIZE_FULL];
@@ -29,12 +31,15 @@ int main() {
 
     ModuleCpu moduleCpu;
     ModuleOpencl moduleOpencl;
+    ModuleCuda moduleCuda;
 
     moduleCpu.inspect();
 
     moduleCpu.printInfo();
     moduleOpencl.printInfo();
+    moduleCuda.printInfo();
 
     moduleCpu.benchmark(MATRIX_SIZE_FULL, TEST_ITERATIONS, matA, matB, matR);
     moduleOpencl.benchmark(MATRIX_SIZE_FULL, TEST_ITERATIONS, matA, matB, matR);
+    moduleCuda.benchmark(MATRIX_SIZE_FULL, TEST_ITERATIONS, matA, matB, matR);
 }
