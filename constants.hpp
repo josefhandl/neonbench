@@ -1,5 +1,5 @@
 
-#define TEST_ITERATIONS 16384*8
+#define TEST_ITERATIONS 16384*1
 #define MAX_RAND_NUM 16u
 #define AVX_WIDTH_FLOAT (int)(256/(sizeof(float)*8))
 #define AVX512_WIDTH_FLOAT AVX_WIDTH_FLOAT*64

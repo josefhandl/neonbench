@@ -3,19 +3,22 @@
 #include <vector>
 #include <fstream>
 
+#define CL_HPP_ENABLE_EXCEPTIONS
+#define CL_HPP_TARGET_OPENCL_VERSION 300
+#define __CL_ENABLE_EXCEPTIONS
+
 #ifdef _WIN32
 #elif __APPLE__
     #include <OpenCL/opencl.hpp>
 #elif __linux__
-    #include <CL/opencl.hpp>
+    //#include <CL/opencl.hpp>
+    //#include <CL/cl.hpp>
+    #include <CL/cl.hpp>
 #endif
 
 
 #define KERNEL_FILE "opencl/kernel.cl"
 #define KERNEL_FUNCTION "vector_add"
-
-#define CL_HPP_ENABLE_EXCEPTIONS
-#define CL_HPP_TARGET_OPENCL_VERSION 300
 
 class ModuleOpencl {
 

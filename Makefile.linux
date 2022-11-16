@@ -15,7 +15,7 @@ libs: cpu/scalar.so $(LIBS_S)
 cpu/scalar.so: cpu/scalar.cpp
 	$(CC) $(CFLAGS) -fPIC -shared -o $@ $^
 
-%.so: %.cpp
+cpu/%.so: cpu/%.cpp
 	$(CC) $(CFLAGS) -fPIC -shared -m$(patsubst cpu/%.so,%,$@) -o $@ $^
 
 # CUDA module
@@ -24,11 +24,11 @@ cuda/cuda.o: cuda/cuda.cu
 #--gpu-architecture=sm_75
 
 benchmark.o: benchmark.cpp
-	$(CC) $(CFLAGS) -fPIC -ldl -shared  -o $@ $^
+	$(CC) $(CFLAGS) -fPIC -ldl -shared -o $@ $^ -lOpenCL -I/usr/lib/x86_64-linux-gnu/libOpenCL.so
 
 benchmark: cuda/cuda.o benchmark.o
-	nvcc -o $@ $^
+	nvcc -o $@ $^ -lOpenCL -I/usr/lib/x86_64-linux-gnu/libOpenCL.so
 # -Xcompiler -shared -fPIC -ldl -lcuda -I/usr/local/cuda/include/ -L/usr/local/cuda/lib64 -lcuda -L/usr/local/cuda/lib64/libcudart.so
 
 clean:
-	rm -f benchmark cpu/scalar.so cuda/cuda.o $(LIBS_S)
+	rm -f benchmark benchmark.o cpu/scalar.so cuda/cuda.o $(LIBS_S)

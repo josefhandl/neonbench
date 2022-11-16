@@ -243,7 +243,7 @@ public:
     }
 
     void benchmark(unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR) {
-        std::cout << "CPU Benchmark:" << std::endl;
+        std::cout << "CPU benchmark:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
 
         // Scalar

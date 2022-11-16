@@ -9,7 +9,7 @@
 #endif
 
 extern "C" int64_t cu_make_cuda_benchmark(const int device, unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR);
-extern "C" void cu_printInfo();
+extern "C" void cu_printInfo(int &deviceCount);
 
 //https://github.com/zchee/cuda-sample/blob/master/1_Utilities/deviceQuery/deviceQuery.cpp
 
@@ -24,18 +24,21 @@ private:
 
 public:
     void printInfo() {
-        cu_printInfo();
+        std::cout << "CUDA info:" << std::endl;
+        std::cout << "--------------------------------------" << std::endl;
+        
+        cu_printInfo(deviceCount);
+        
+        std::cout << std::endl;
     }
 
     void benchmark(unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR) {
-        std::cout << "CUDA Benchmark:" << std::endl;
+        std::cout << "CUDA benchmark:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
 
         std::string points;
 
         for (int device = 0; device < deviceCount; ++device) {
-            //std::cout << device.getInfo<CL_DEVICE_NAME>() << ": ";
-
             int64_t time;
             for (int i = 0; i < 4; ++i) {
                 time = make_cuda_benchmark(device, matSize, testIter, matA, matB, matR);
