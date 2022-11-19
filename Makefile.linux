@@ -24,11 +24,10 @@ cuda/cuda.o: cuda/cuda.cu
 #--gpu-architecture=sm_75
 
 benchmark.o: benchmark.cpp
-	$(CC) $(CFLAGS) -fPIC -ldl -shared -o $@ $^ -lOpenCL -I/usr/lib/x86_64-linux-gnu/libOpenCL.so
+	$(CC) $(CFLAGS) -lOpenCL -fPIC -ldl -shared -o $@ $^
 
 benchmark: cuda/cuda.o benchmark.o
-	nvcc -o $@ $^ -lOpenCL -I/usr/lib/x86_64-linux-gnu/libOpenCL.so
-# -Xcompiler -shared -fPIC -ldl -lcuda -I/usr/local/cuda/include/ -L/usr/local/cuda/lib64 -lcuda -L/usr/local/cuda/lib64/libcudart.so
+	nvcc -o $@ $^
 
 clean:
 	rm -f benchmark benchmark.o cpu/scalar.so cuda/cuda.o $(LIBS_S)

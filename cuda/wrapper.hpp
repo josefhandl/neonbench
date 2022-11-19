@@ -39,6 +39,8 @@ public:
         std::string points;
 
         for (int device = 0; device < deviceCount; ++device) {
+            std::cout << "Device " << device << ": ";
+
             int64_t time;
             for (int i = 0; i < 4; ++i) {
                 time = make_cuda_benchmark(device, matSize, testIter, matA, matB, matR);
@@ -48,5 +50,7 @@ public:
             bool benchmark_ok = test_benchmark(matSize, matA, matB, matR);
             std::cout << (benchmark_ok ? points : "Failed") << std::endl;
         }
+
+        std::cout << std::endl;
     }
 };

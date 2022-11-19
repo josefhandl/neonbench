@@ -5,15 +5,15 @@
 
 #define CL_HPP_ENABLE_EXCEPTIONS
 #define CL_HPP_TARGET_OPENCL_VERSION 300
-#define __CL_ENABLE_EXCEPTIONS
 
 #ifdef _WIN32
 #elif __APPLE__
     #include <OpenCL/opencl.hpp>
 #elif __linux__
     //#include <CL/opencl.hpp>
-    //#include <CL/cl.hpp>
-    #include <CL/cl.hpp>
+    //#include <OpenCL/cl.hpp>
+    //#include <OpenCL/opencl.hpp>
+    #include <CL/cl2.hpp>
 #endif
 
 
@@ -84,7 +84,9 @@ public:
         }
 
         int deviceTotal = 0;
-        for (cl::Platform platform : platformList) {
+        for (const cl::Platform &platform : platformList) {
+            std::cout << "Platform name: " << platform.getInfo<CL_PLATFORM_NAME>() << std::endl;
+
             std::vector<cl::Device> deviceList;
             platform.getDevices(CL_DEVICE_TYPE_ALL, &deviceList);
 
@@ -94,10 +96,9 @@ public:
 
             deviceTotal += deviceList.size();
 
-            std::cout << "Platform name: " << platform.getInfo<CL_PLATFORM_NAME>() << std::endl;
             std::cout << "Devices: " << deviceList.size() << std::endl;
 
-            for (cl::Device device : deviceList) {
+            for (const cl::Device &device : deviceList) {
                 cl_devices.push_back(device);
 
                 std::cout << "  Device Type: ";
@@ -145,5 +146,7 @@ public:
             bool benchmark_ok = test_benchmark(matSize, matA, matB, matR);
             std::cout << (benchmark_ok ? points : "Failed") << std::endl;
         }
+
+        std::cout << std::endl;
     }
 };

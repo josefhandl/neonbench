@@ -165,8 +165,8 @@ extern "C" void cu_printInfo(int &deviceCount) {
         // Console log
         cudaDriverGetVersion(&driverVersion);
         cudaRuntimeGetVersion(&runtimeVersion);
-        printf("  CUDA Driver Version / Runtime Version          %d.%d / %d.%d\n", driverVersion/1000, (driverVersion%100)/10, runtimeVersion/1000, (runtimeVersion%100)/10);
-        printf("  CUDA Capability Major/Minor version number:    %d.%d\n", deviceProp.major, deviceProp.minor);
+        printf("  CUDA Driver Version / Runtime Version       %d.%d / %d.%d\n", driverVersion/1000, (driverVersion%100)/10, runtimeVersion/1000, (runtimeVersion%100)/10);
+        printf("  CUDA Capability Major/Minor version number: %d.%d\n", deviceProp.major, deviceProp.minor);
 
         //char msg[256];
         //SPRINTF(msg, "  Total amount of global memory:                 %.0f MBytes (%llu bytes)\n",
@@ -175,8 +175,8 @@ extern "C" void cu_printInfo(int &deviceCount) {
         printf("  Multiprocessors: %2d\n", deviceProp.multiProcessorCount);
         //printf("major %d, minor %d\n", deviceProp.major, deviceProp.);
 
-        printf("  CUDA Cores/MP: %d\n", _ConvertSMVer2Cores(deviceProp.major, deviceProp.minor));
-        printf("  CUDA Cores: %d\n", _ConvertSMVer2Cores(deviceProp.major, deviceProp.minor) * deviceProp.multiProcessorCount);
+        printf("  CUDA Cores/MP:   %d\n", _ConvertSMVer2Cores(deviceProp.major, deviceProp.minor));
+        printf("  CUDA Cores:      %d\n", _ConvertSMVer2Cores(deviceProp.major, deviceProp.minor) * deviceProp.multiProcessorCount);
 
         //printf("  GPU Max Clock rate:                            %.0f MHz (%0.2f GHz)\n", deviceProp.clockRate * 1e-3f, deviceProp.clockRate * 1e-6f);
         
