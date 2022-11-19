@@ -48,6 +48,8 @@
     #include <sys/sysinfo.h> // get memory size
 #endif
 
+#define VENDOR_ID_LENGTH 13
+
 class ModuleCpu {
 
 private:
@@ -62,6 +64,8 @@ private:
 
     bool vmDetected = false;
     std::string vmName;
+    char hyperVendorId[VENDOR_ID_LENGTH] = {};
+    std::string vmVendor;
 
     void inspect_inst_sets() {
         // check sse, avx and avx512f support
@@ -166,11 +170,6 @@ private:
         const auto queryVendorIdMagic = 0x40000000;
         cpuid(cpuInfo, queryVendorIdMagic);
 
-        const int vendorIdLength = 13;
-        using VendorIdStr = char[vendorIdLength];
-
-        VendorIdStr hyperVendorId = {};
-
         memcpy(hyperVendorId + 0, &cpuInfo[1], 4);
         memcpy(hyperVendorId + 4, &cpuInfo[2], 4);
         memcpy(hyperVendorId + 8, &cpuInfo[3], 4);
@@ -186,7 +185,7 @@ private:
         };
 
         for (const auto& vendor : vendors) {
-            if (!memcmp(vendor.first, hyperVendorId, vendorIdLength)) {
+            if (!memcmp(vendor.first, hyperVendorId, VENDOR_ID_LENGTH)) {
                 vmDetected = true;
                 vmName = std::string(vendor.second);
             }
@@ -234,12 +233,11 @@ public:
 
         std::cout << "Virtual Machine: ";
         if (vmDetected)
-            std::cout << "Hypervisor detected - " << vmName;
+            std::cout << "Hypervisor detected - " << vmName << " (" << hyperVendorId << ")";
         else
-            std::cout << "Hypervisor not detected";
-        std::cout << std::endl;
+            std::cout << "Hypervisor not detected" << " (" << hyperVendorId << ")";
 
-        std::cout << std::endl;
+        std::cout << std::endl << std::endl;
     }
 
     void benchmark(unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR) {
