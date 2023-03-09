@@ -18,10 +18,10 @@
     #define LIB_AVX "./cpu/avx.dylib"
     #define LIB_AVX512 "./cpu/avx512f.dylib"
 #elif __linux__
-    #define LIB_SCALAR "./cpu/scalar.so"
-    #define LIB_SSE "./cpu/sse.so"
-    #define LIB_AVX "./cpu/avx.so"
-    #define LIB_AVX512 "./cpu/avx512f.so"
+    #define LIB_SCALAR "./cpu/libneonbench_cpu_scalar.so"
+    #define LIB_SSE "./cpu/libneonbench_cpu_sse.so"
+    #define LIB_AVX "./cpu/libneonbench_cpu_avx.so"
+    #define LIB_AVX512 "./cpu/libneonbench_cpu_avx512f.so"
 #endif
 
 #ifdef _WIN32
