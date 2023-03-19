@@ -2,8 +2,12 @@
 #include "constants.hpp"
 
 #include "cpu/cpu.hpp"
+#ifdef HAVE_OPENCL
 #include "opencl/opencl.hpp"
+#endif
+#ifdef HAVE_CUDA
 #include "cuda/wrapper.hpp"
+#endif
 
 // init matrices
 alignas(64) float matA[MATRIX_SIZE_FULL];
@@ -30,16 +34,29 @@ int main() {
     init_matrices();
 
     ModuleCpu moduleCpu;
+
+    #ifdef HAVE_OPENCL
     ModuleOpencl moduleOpencl;
+    #endif
+    #ifdef HAVE_CUDA
     ModuleCuda moduleCuda;
+    #endif
 
     moduleCpu.inspect();
 
     moduleCpu.printInfo();
+    #ifdef HAVE_OPENCL
     moduleOpencl.printInfo();
+    #endif
+    #ifdef HAVE_CUDA
     moduleCuda.printInfo();
+    #endif
 
     moduleCpu.benchmark(MATRIX_SIZE_FULL, TEST_ITERATIONS, matA, matB, matR);
+    #ifdef HAVE_OPENCL
     moduleOpencl.benchmark(MATRIX_SIZE_FULL, TEST_ITERATIONS, matA, matB, matR);
+    #endif
+    #ifdef HAVE_CUDA
     moduleCuda.benchmark(MATRIX_SIZE_FULL, TEST_ITERATIONS, matA, matB, matR);
+    #endif
 }
