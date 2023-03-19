@@ -61,6 +61,7 @@ private:
     std::string cpuName;
     unsigned cpuCores;
     unsigned long long ramSize;
+    unsigned long long swapSize;
 
     bool vmDetected = false;
     std::string vmName;
@@ -144,8 +145,10 @@ private:
             sysctl(mib, 2, &ramSize, &length, NULL, 0);
         #elif __linux__
             struct sysinfo sys_info;
-            if (sysinfo(&sys_info) != -1)
+            if (sysinfo(&sys_info) != -1) {
                 ramSize = (uint64_t)sys_info.totalram * ((double)sys_info.mem_unit * (double)1024 / (double)1000);
+                swapSize = sys_info.totalswap;
+            }
         #endif
     }
 
@@ -228,8 +231,11 @@ public:
         std::cout << "CPUs (threads): " << cpuCores << std::endl;
 
         std::string ramSizeStr;
+        std::string swapSizeStr;
         num_bin_prefix(ramSize, &ramSizeStr);
+        num_bin_prefix(swapSize, &swapSizeStr);
         std::cout << "RAM size: " << ramSizeStr << "B" << std::endl;
+        std::cout << "Swap size: " << swapSizeStr << "B" << std::endl;
 
         std::cout << "Virtual Machine: ";
         if (vmDetected)
