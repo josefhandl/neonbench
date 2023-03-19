@@ -199,14 +199,16 @@ private:
         bool benchmark_ok_s;
         bool benchmark_ok_m;
 
+        unsigned lastItem = floor(matSize / cpuCores) * cpuCores;
+
         // Single-thread
-        int64_t points_s = compute_points(matSize, testIter, make_benchmark(libName, 1, matSize, testIter, matA, matB, matR), &points);
-        benchmark_ok_s = test_benchmark(matSize, matA, matB, matR);
+        int64_t points_s = compute_points(lastItem, testIter, make_benchmark(libName, 1, lastItem, testIter, matA, matB, matR), &points);
+        benchmark_ok_s = test_benchmark(lastItem, matA, matB, matR);
         std::cout << (benchmark_ok_s ? points : "Failed") << "\t";
 
         // Multi-thread
-        int64_t points_m = compute_points(matSize, testIter, make_benchmark(libName, cpuCores, matSize, testIter, matA, matB, matR), &points);
-        benchmark_ok_m = test_benchmark(matSize, matA, matB, matR);
+        int64_t points_m = compute_points(lastItem, testIter, make_benchmark(libName, cpuCores, lastItem, testIter, matA, matB, matR), &points);
+        benchmark_ok_m = test_benchmark(lastItem, matA, matB, matR);
         std::cout << (benchmark_ok_m ? points : "Failed");
 
         if (benchmark_ok_s && benchmark_ok_m) {

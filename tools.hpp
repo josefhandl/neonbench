@@ -58,15 +58,12 @@ int64_t compute_points(unsigned matSize, unsigned testIter, int64_t time, std::s
 }
 
 void reset_result_matrix(float *matR) {
-    for (int y = 0; y < MATRIX_SIZE; y++) {
-        for (int x = 0; x < MATRIX_SIZE; x++) {
-            matR[y*MATRIX_SIZE+x] = 0;
-        }
-    }
+    for (unsigned i = 0; i < VECTOR_SIZE; ++i)
+        matR[i] = 0;
 }
 
 bool test_benchmark(unsigned matSize, const float *matA, const float *matB, float *matR) {
-    alignas(64) float matRef[MATRIX_SIZE_FULL];
+    alignas(64) float matRef[VECTOR_SIZE];
     for (unsigned i = 0; i < matSize; i++) {
         matRef[i] = matA[i] + matB[i];
     }

@@ -10,23 +10,16 @@
 #endif
 
 // init matrices
-alignas(64) float matA[MATRIX_SIZE_FULL];
-alignas(64) float matB[MATRIX_SIZE_FULL];
-alignas(64) float matBT[MATRIX_SIZE_FULL];
-alignas(64) float matR[MATRIX_SIZE_FULL];
-
+alignas(64) float matA[VECTOR_SIZE];
+alignas(64) float matB[VECTOR_SIZE];
+alignas(64) float matR[VECTOR_SIZE];
 
 void init_matrices() {
     // fill matrices
     // TODO cache-friendly?
-    for (int y = 0; y < MATRIX_SIZE; y++) {
-        for (int x = 0; x < MATRIX_SIZE; x++) {
-            matA[y*MATRIX_SIZE+x] = static_cast<float>(rand() % MAX_RAND_NUM);
-
-            float b = static_cast<float>(rand() % MAX_RAND_NUM);
-            matB[y*MATRIX_SIZE+x] = b;
-            matBT[x*MATRIX_SIZE+y] = b;
-        }
+    for (int i = 0; i < VECTOR_SIZE; ++i) {
+        matA[i] = static_cast<float>(rand() % MAX_RAND_NUM);
+        matB[i] = static_cast<float>(rand() % MAX_RAND_NUM);
     }
 }
 
@@ -52,11 +45,11 @@ int main() {
     moduleCuda.printInfo();
     #endif
 
-    moduleCpu.benchmark(MATRIX_SIZE_FULL, TEST_ITERATIONS, matA, matB, matR);
+    moduleCpu.benchmark(VECTOR_SIZE, TEST_ITERATIONS, matA, matB, matR);
     #ifdef HAVE_OPENCL
-    moduleOpencl.benchmark(MATRIX_SIZE_FULL, TEST_ITERATIONS, matA, matB, matR);
+    moduleOpencl.benchmark(VECTOR_SIZE, TEST_ITERATIONS, matA, matB, matR);
     #endif
     #ifdef HAVE_CUDA
-    moduleCuda.benchmark(MATRIX_SIZE_FULL, TEST_ITERATIONS, matA, matB, matR);
+    moduleCuda.benchmark(VECTOR_SIZE, TEST_ITERATIONS, matA, matB, matR);
     #endif
 }
