@@ -145,7 +145,7 @@ private:
         #elif __linux__
             struct sysinfo sys_info;
             if (sysinfo(&sys_info) != -1)
-                ramSize = ((uint64_t) sys_info.totalram * sys_info.mem_unit);
+                ramSize = (uint64_t)sys_info.totalram * ((double)sys_info.mem_unit * (double)1024 / (double)1000);
         #endif
     }
 
@@ -228,7 +228,7 @@ public:
         std::cout << "CPUs (threads): " << cpuCores << std::endl;
 
         std::string ramSizeStr;
-        num_si_prefix(ramSize, &ramSizeStr);
+        num_bin_prefix(ramSize, &ramSizeStr);
         std::cout << "RAM size: " << ramSizeStr << "B" << std::endl;
 
         std::cout << "Virtual Machine: ";

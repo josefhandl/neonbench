@@ -35,6 +35,21 @@ void num_si_prefix(int64_t n, std::string *numStr) {
     *numStr = ss.str();
 }
 
+void num_bin_prefix(int64_t n, std::string *numStr) {
+    std::stringstream ss;
+
+    if (n > pow(10, 10))
+        ss << (int)(n / pow(2, 30)) << " G";
+    else if (n > pow(10, 7))
+        ss << (int)(n / pow(2, 20)) << " M";
+    else if (n > pow(10, 4))
+        ss << (int)(n / pow(2, 10)) << " k";
+    else
+        ss << (int)n;
+
+    *numStr = ss.str();
+}
+
 int64_t compute_points(unsigned matSize, unsigned testIter, int64_t time, std::string *points) {
     double p = (1.0 / ((double)time*pow(10, -6))) * matSize * testIter;
     num_si_prefix(p, points);
