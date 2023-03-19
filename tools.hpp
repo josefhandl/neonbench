@@ -39,11 +39,11 @@ void num_bin_prefix(int64_t n, std::string *numStr) {
     std::stringstream ss;
 
     if (n > pow(10, 10))
-        ss << (int)(n / pow(2, 30)) << " G";
+        ss << (int)(n / pow(2, 30)) << " Gi";
     else if (n > pow(10, 7))
-        ss << (int)(n / pow(2, 20)) << " M";
+        ss << (int)(n / pow(2, 20)) << " Mi";
     else if (n > pow(10, 4))
-        ss << (int)(n / pow(2, 10)) << " k";
+        ss << (int)(n / pow(2, 10)) << " ki";
     else
         ss << (int)n << " ";
 

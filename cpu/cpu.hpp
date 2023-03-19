@@ -66,7 +66,6 @@ private:
     bool vmDetected = false;
     std::string vmName;
     char hyperVendorId[VENDOR_ID_LENGTH] = {};
-    std::string vmVendor;
 
     void inspect_inst_sets() {
         // check sse, avx and avx512f support
@@ -239,9 +238,9 @@ public:
 
         std::cout << "Virtual Machine: ";
         if (vmDetected)
-            std::cout << "Hypervisor detected - " << vmName << " (" << hyperVendorId << ")";
+            std::cout << "Hypervisor detected - " << vmName << " (vendor: \"" << hyperVendorId << "\")";
         else
-            std::cout << "Hypervisor not detected" << " (" << hyperVendorId << ")";
+            std::cout << "Hypervisor not detected" << " (vendor: \"" << hyperVendorId << "\")";
 
         std::cout << std::endl << std::endl;
     }
