@@ -45,7 +45,7 @@ void num_bin_prefix(int64_t n, std::string *numStr) {
     else if (n > pow(10, 4))
         ss << (int)(n / pow(2, 10)) << " k";
     else
-        ss << (int)n;
+        ss << (int)n << " ";
 
     *numStr = ss.str();
 }
