@@ -8,7 +8,7 @@
 #include <thread>
 #include <algorithm>
 
-#include "constants.hpp"
+#include "benchmarked-object.hpp"
 
 // runtime library loading
 #ifdef _WIN32
@@ -57,25 +57,25 @@ int64_t compute_points(unsigned matSize, unsigned testIter, int64_t time, std::s
     return p;
 }
 
-void reset_result_matrix(float *matR) {
-    for (unsigned i = 0; i < VECTOR_SIZE; ++i)
-        matR[i] = 0;
+void reset_result_matrix(BenchmarkedObject &bo) {
+    for (unsigned i = 0; i < bo.vectorSize; ++i)
+        bo.vecR[i] = 0;
 }
 
-bool test_benchmark(unsigned matSize, const float *matA, const float *matB, float *matR) {
-    alignas(64) float matRef[VECTOR_SIZE];
-    for (unsigned i = 0; i < matSize; i++) {
-        matRef[i] = matA[i] + matB[i];
+bool test_benchmark(BenchmarkedObject &bo) {
+    alignas(64) float matRef[bo.vectorSize];
+    for (unsigned i = 0; i < bo.vectorSize; i++) {
+        matRef[i] = bo.vecA[i] + bo.vecB[i];
     }
 
-    for (unsigned i = 0; i < matSize; ++i) {
-        if (matR[i] != matRef[i]) {
-            reset_result_matrix(matR);
+    for (unsigned i = 0; i < bo.vectorSize; ++i) {
+        if (bo.vecR[i] != matRef[i]) {
+            reset_result_matrix(bo);
             return false;
         }
     }
 
-    reset_result_matrix(matR);
+    reset_result_matrix(bo);
     return true;
 }
 
@@ -94,11 +94,7 @@ void make_benchmark_thread(
 int64_t make_benchmark(
         const char *libName,
         unsigned parallel,
-        unsigned matSize,
-        unsigned testIter,
-        const float *matA,
-        const float *matB,
-        float *matR) {
+        BenchmarkedObject &bo) {
     // https://youtu.be/_kIa4D7kQ8I
 
     // Linux + MacOS
@@ -156,10 +152,10 @@ int64_t make_benchmark(
 
     std::vector<std::thread> th(parallel);
     for (unsigned i = 0; i < parallel; ++i) {
-        unsigned fragmentSize = ceil(matSize / parallel);
+        unsigned fragmentSize = (int)(bo.vectorSize / parallel);
         unsigned iStart = i * fragmentSize;
-        unsigned iSize = std::min((i+1)*fragmentSize, matSize) - iStart;
-        th[i] = std::thread(make_benchmark_thread, vector_add, iSize, testIter, &matA[iStart], &matB[iStart], &matR[iStart]);
+        unsigned iSize = fragmentSize;//std::min((i+1)*fragmentSize, bo.vectorSize) - iStart;
+        th[i] = std::thread(make_benchmark_thread, vector_add, iSize, bo.iterations, &bo.vecA[iStart], &bo.vecB[iStart], &bo.vecR[iStart]);
     }
 
     for (unsigned i = 0; i < parallel; ++i) {

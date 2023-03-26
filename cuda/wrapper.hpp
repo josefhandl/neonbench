@@ -2,6 +2,9 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <memory>
+
+#include "../benchmarked-object.hpp"
 
 #ifdef _WIN32
 #elif __APPLE__
@@ -16,6 +19,8 @@ extern "C" void cu_printInfo(int &deviceCount);
 class ModuleCuda {
 
 private:
+    std::unique_ptr<BenchmarkedObject> bo;
+
     int deviceCount = 0;
 
     int64_t make_cuda_benchmark(const int device, unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR) {
@@ -32,7 +37,11 @@ public:
         std::cout << std::endl;
     }
 
-    void benchmark(unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR) {
+    void benchmark_prepare(unsigned size, unsigned iterations) {
+        bo = std::make_unique<BenchmarkedObject>(size, iterations);
+    }
+
+    void benchmark() {
         std::cout << "CUDA benchmark:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
 
@@ -43,11 +52,11 @@ public:
 
             int64_t time;
             for (int i = 0; i < 4; ++i) {
-                time = make_cuda_benchmark(device, matSize, testIter, matA, matB, matR);
+                time = make_cuda_benchmark(device, bo->vectorSize, bo->iterations, bo->vecA, bo->vecB, bo->vecR);
             }
-            compute_points(matSize, testIter, time, &points);
+            compute_points(bo->vectorSize, bo->iterations, time, &points);
 
-            bool benchmark_ok = test_benchmark(matSize, matA, matB, matR);
+            bool benchmark_ok = test_benchmark(*bo);
             std::cout << (benchmark_ok ? points : "Failed") << std::endl;
         }
 

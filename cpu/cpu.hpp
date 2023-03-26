@@ -4,8 +4,10 @@
 #include <string.h> // memory
 #include <string>
 #include <map>
+#include <memory>
 
 #include "../tools.hpp"
+#include "../benchmarked-object.hpp"
 
 #ifdef _WIN32
     #define LIB_SCALAR "cpu/scalar.dll"
@@ -53,6 +55,9 @@
 class ModuleCpu {
 
 private:
+    std::unique_ptr<BenchmarkedObject> bo_singleThread;
+    std::unique_ptr<BenchmarkedObject> bo_multiThread;
+
     bool hw_sse = false;
     bool hw_avx = false;
     //bool hw_avx2 = false;
@@ -194,21 +199,21 @@ private:
         }
     }
 
-    void launch_benchmark(unsigned matSize, unsigned testIter, const char *libName, const float *matA, const float *matB, float *matR) {
+    void launch_benchmark(const char *libName) {
         std::string points;
         bool benchmark_ok_s;
         bool benchmark_ok_m;
 
-        unsigned lastItem = floor(matSize / cpuCores) * cpuCores;
-
         // Single-thread
-        int64_t points_s = compute_points(lastItem, testIter, make_benchmark(libName, 1, lastItem, testIter, matA, matB, matR), &points);
-        benchmark_ok_s = test_benchmark(lastItem, matA, matB, matR);
+        //make_benchmark(libName, 1, *bo_singleThread);
+        int64_t points_s = compute_points(bo_singleThread->vectorSize, bo_singleThread->iterations, make_benchmark(libName, 1, *bo_singleThread), &points);
+        benchmark_ok_s = test_benchmark(*bo_singleThread);
         std::cout << (benchmark_ok_s ? points : "Failed") << "\t";
 
         // Multi-thread
-        int64_t points_m = compute_points(lastItem, testIter, make_benchmark(libName, cpuCores, lastItem, testIter, matA, matB, matR), &points);
-        benchmark_ok_m = test_benchmark(lastItem, matA, matB, matR);
+        make_benchmark(libName, cpuCores, *bo_multiThread);
+        int64_t points_m = compute_points(bo_multiThread->vectorSize, bo_multiThread->iterations, make_benchmark(libName, cpuCores, *bo_multiThread), &points);
+        benchmark_ok_m = test_benchmark(*bo_multiThread);
         std::cout << (benchmark_ok_m ? points : "Failed");
 
         if (benchmark_ok_s && benchmark_ok_m) {
@@ -247,7 +252,12 @@ public:
         std::cout << std::endl << std::endl;
     }
 
-    void benchmark(unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR) {
+    void benchmark_prepare(unsigned size, unsigned iterations) {
+        bo_singleThread = std::make_unique<BenchmarkedObject>(size, iterations);
+        bo_multiThread = std::make_unique<BenchmarkedObject>(size*cpuCores, iterations);
+    }
+
+    void benchmark() {
         std::cout << "CPU benchmark:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
 
@@ -255,7 +265,7 @@ public:
         //---------
         std::cout << "Scalar: ";
         if (hw_sse)
-            launch_benchmark(matSize, testIter, LIB_SCALAR, matA, matB, matR);
+            launch_benchmark(LIB_SCALAR);
         else
             std::cout << "Not supported";
         std::cout << std::endl;
@@ -264,7 +274,7 @@ public:
         //---------
         std::cout << "SSE:    ";
         if (hw_sse)
-            launch_benchmark(matSize, testIter, LIB_SSE, matA, matB, matR);
+            launch_benchmark(LIB_SSE);
         else
             std::cout << "Not supported";
         std::cout << std::endl;
@@ -273,7 +283,7 @@ public:
         //---------
         std::cout << "AVX:    ";
         if (hw_avx)
-            launch_benchmark(matSize, testIter, LIB_AVX, matA, matB, matR);
+            launch_benchmark(LIB_AVX);
         else
             std::cout << "Not supported";
         std::cout << std::endl;
@@ -282,7 +292,7 @@ public:
         //---------
         std::cout << "AVX512: ";
         if (hw_avx512f)
-            launch_benchmark(matSize, testIter, LIB_AVX512, matA, matB, matR);
+            launch_benchmark(LIB_AVX512);
         else
             std::cout << "Not supported";
         std::cout << std::endl;
