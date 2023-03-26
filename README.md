@@ -8,10 +8,10 @@ Ubuntu:
 cmake make clang libstdc++-12-dev
 
 # optional (CUDA):
-# TODO install cuda runtime
+# TODO cuda runtime
 
 # optional (OpenCL):
-# TODO install opencl for intel/amd cpu, nvidia/amd gpu
+# TODO opencl runtime for intel/amd cpu, nvidia/amd gpu
 ```
 
 ## Usage
