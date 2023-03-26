@@ -231,6 +231,7 @@ public:
     void benchmark() {
         std::cout << "CPU benchmark:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
+        std::cout << "\tST\tMT" << std::endl;
 
         // Scalar
         //---------
