@@ -6,7 +6,7 @@
 
 #define MAX_RAND_NUM 16u
 
-class BenchmarkedObject {
+class BenchmarkedObjectFloat {
 public:
     float* vecA;
     float* vecB;
@@ -14,15 +14,18 @@ public:
     unsigned vectorSize;
     unsigned iterations;
 
-    BenchmarkedObject(unsigned vectorSize, unsigned iterations)
+    BenchmarkedObjectFloat(unsigned vectorSize, unsigned iterations, unsigned maxRnd)
             : vectorSize(vectorSize), iterations(iterations) {
         this->vecA = static_cast<float*>(aligned_alloc(64, vectorSize * sizeof(float)));
         this->vecB = static_cast<float*>(aligned_alloc(64, vectorSize * sizeof(float)));
         this->vecR = static_cast<float*>(aligned_alloc(64, vectorSize * sizeof(float)));
 
         for (unsigned i = 0; i < vectorSize; ++i) {
-            vecA[i] = static_cast<float>(rand() % MAX_RAND_NUM);
-            vecB[i] = static_cast<float>(rand() % MAX_RAND_NUM);
+            vecA[i] = static_cast<float>(rand() % maxRnd);
+            vecB[i] = static_cast<float>(rand() % maxRnd);
         }
     }
+
+    BenchmarkedObjectFloat(unsigned vectorSize, unsigned iterations)
+            : BenchmarkedObjectFloat(vectorSize, iterations, MAX_RAND_NUM) {}
 };

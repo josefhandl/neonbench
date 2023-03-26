@@ -3,7 +3,7 @@
 #include <vector>
 #include <fstream>
 
-#include "../benchmarked-object.hpp"
+#include "../benchmarked-object-float.hpp"
 
 #define CL_HPP_ENABLE_EXCEPTIONS
 #define CL_HPP_TARGET_OPENCL_VERSION 300
@@ -25,7 +25,7 @@
 class ModuleOpencl {
 
 private:
-    std::unique_ptr<BenchmarkedObject> bo;
+    std::unique_ptr<BenchmarkedObjectFloat> bo;
 
     std::vector<cl::Device> cl_devices;
 
@@ -133,7 +133,7 @@ public:
     }
 
     void benchmark_prepare(unsigned size, unsigned iterations) {
-        bo = std::make_unique<BenchmarkedObject>(size, iterations);
+        bo = std::make_unique<BenchmarkedObjectFloat>(size, iterations);
     }
 
     void benchmark() {

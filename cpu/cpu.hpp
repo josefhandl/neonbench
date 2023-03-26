@@ -7,7 +7,7 @@
 #include <memory>
 
 #include "../tools.hpp"
-#include "../benchmarked-object.hpp"
+#include "../benchmarked-object-float.hpp"
 
 #ifdef _WIN32
     #define LIB_SCALAR "cpu/scalar.dll"
@@ -55,8 +55,8 @@
 class ModuleCpu {
 
 private:
-    std::unique_ptr<BenchmarkedObject> bo_singleThread;
-    std::unique_ptr<BenchmarkedObject> bo_multiThread;
+    std::unique_ptr<BenchmarkedObjectFloat> bo_singleThread;
+    std::unique_ptr<BenchmarkedObjectFloat> bo_multiThread;
 
     bool hw_sse = false;
     bool hw_avx = false;
@@ -65,8 +65,6 @@ private:
 
     std::string cpuName;
     unsigned cpuCores;
-    unsigned long long ramSize;
-    unsigned long long swapSize;
 
     bool vmDetected = false;
     std::string vmName;
@@ -130,29 +128,6 @@ private:
             cpuCores = sysinfo.dwNumberOfProcessors;
         #elif __APPLE__ || __linux__
             cpuCores = sysconf(_SC_NPROCESSORS_ONLN);
-        #endif
-    }
-
-    void inspect_ram_size() {
-        // https://stackoverflow.com/questions/349889/how-do-you-determine-the-amount-of-linux-system-ram-in-c
-        // https://stackoverflow.com/questions/43481494/total-ram-size-linux-sysinfo-vs-proc-meminfo
-        // https://ideone.com/RuHMUK
-        #ifdef _WIN32
-            GetPhysicallyInstalledSystemMemory(&ramSize);
-            ramSize *= 1024;
-        #elif __APPLE__
-            int mib[2];
-            size_t length;
-            mib[0] = CTL_HW;
-            mib[1] = HW_MEMSIZE;
-            length = sizeof(int64_t);
-            sysctl(mib, 2, &ramSize, &length, NULL, 0);
-        #elif __linux__
-            struct sysinfo sys_info;
-            if (sysinfo(&sys_info) != -1) {
-                ramSize = (uint64_t)sys_info.totalram * ((double)sys_info.mem_unit * (double)1024 / (double)1000);
-                swapSize = sys_info.totalswap;
-            }
         #endif
     }
 
@@ -230,7 +205,6 @@ public:
         inspect_inst_sets();
         inspect_cpu_name();
         inspect_cpu_cores();
-        inspect_ram_size();
         inspect_hypervisor_presence();
     }
 
@@ -239,13 +213,6 @@ public:
         std::cout << "--------------------------------------" << std::endl;
         std::cout << "CPU Name: " << cpuName << std::endl;
         std::cout << "CPUs (threads): " << cpuCores << std::endl;
-
-        std::string ramSizeStr;
-        std::string swapSizeStr;
-        num_bin_prefix(ramSize, &ramSizeStr);
-        num_bin_prefix(swapSize, &swapSizeStr);
-        std::cout << "RAM size: " << ramSizeStr << "B" << std::endl;
-        std::cout << "Swap size: " << swapSizeStr << "B" << std::endl;
 
         std::cout << "Virtual Machine: ";
         if (vmDetected)
@@ -257,8 +224,8 @@ public:
     }
 
     void benchmark_prepare(unsigned size, unsigned iterations) {
-        bo_singleThread = std::make_unique<BenchmarkedObject>(size, iterations);
-        bo_multiThread = std::make_unique<BenchmarkedObject>(size*cpuCores, iterations);
+        bo_singleThread = std::make_unique<BenchmarkedObjectFloat>(size, iterations);
+        bo_multiThread = std::make_unique<BenchmarkedObjectFloat>(size*cpuCores, iterations);
     }
 
     void benchmark() {

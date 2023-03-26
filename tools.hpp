@@ -8,7 +8,7 @@
 #include <thread>
 #include <algorithm>
 
-#include "benchmarked-object.hpp"
+#include "benchmarked-object-float.hpp"
 
 // runtime library loading
 #ifdef _WIN32
@@ -57,12 +57,12 @@ int64_t compute_points(unsigned matSize, unsigned testIter, int64_t time, std::s
     return p;
 }
 
-void reset_result_matrix(BenchmarkedObject &bo) {
+void reset_result_matrix(BenchmarkedObjectFloat &bo) {
     for (unsigned i = 0; i < bo.vectorSize; ++i)
         bo.vecR[i] = 0;
 }
 
-bool test_benchmark(BenchmarkedObject &bo) {
+bool test_benchmark(BenchmarkedObjectFloat &bo) {
     alignas(64) float matRef[bo.vectorSize];
     for (unsigned i = 0; i < bo.vectorSize; i++) {
         matRef[i] = bo.vecA[i] + bo.vecB[i];
@@ -94,7 +94,7 @@ void make_benchmark_thread(
 int64_t make_benchmark(
         const char *libName,
         unsigned parallel,
-        BenchmarkedObject &bo) {
+        BenchmarkedObjectFloat &bo) {
     // https://youtu.be/_kIa4D7kQ8I
 
     // Linux + MacOS

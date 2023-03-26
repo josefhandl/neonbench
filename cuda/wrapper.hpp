@@ -4,7 +4,7 @@
 #include <fstream>
 #include <memory>
 
-#include "../benchmarked-object.hpp"
+#include "../benchmarked-object-float.hpp"
 
 #ifdef _WIN32
 #elif __APPLE__
@@ -19,7 +19,7 @@ extern "C" void cu_printInfo(int &deviceCount);
 class ModuleCuda {
 
 private:
-    std::unique_ptr<BenchmarkedObject> bo;
+    std::unique_ptr<BenchmarkedObjectFloat> bo;
 
     int deviceCount = 0;
 
@@ -38,7 +38,7 @@ public:
     }
 
     void benchmark_prepare(unsigned size, unsigned iterations) {
-        bo = std::make_unique<BenchmarkedObject>(size, iterations);
+        bo = std::make_unique<BenchmarkedObjectFloat>(size, iterations);
     }
 
     void benchmark() {
