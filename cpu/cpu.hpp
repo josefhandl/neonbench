@@ -50,7 +50,7 @@
     #include <sys/sysinfo.h> // get memory size
 #endif
 
-#define VENDOR_ID_LENGTH 13
+#define HYPER_VENDOR_ID_LENGTH 13
 
 class ModuleCpu {
 
@@ -68,7 +68,7 @@ private:
 
     bool vmDetected = false;
     std::string vmName;
-    char hyperVendorId[VENDOR_ID_LENGTH] = {};
+    char hyperVendorId[HYPER_VENDOR_ID_LENGTH] = {};
 
     void inspect_inst_sets() {
         // check sse, avx and avx512f support
@@ -167,7 +167,7 @@ private:
         };
 
         for (const auto& vendor : vendors) {
-            if (!memcmp(vendor.first, hyperVendorId, VENDOR_ID_LENGTH)) {
+            if (!memcmp(vendor.first, hyperVendorId, HYPER_VENDOR_ID_LENGTH)) {
                 vmDetected = true;
                 vmName = std::string(vendor.second);
             }
