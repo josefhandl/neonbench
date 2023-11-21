@@ -19,6 +19,20 @@ intel-opencl-icd # Intel GPU runtime
 mesa-opencl-icd # Mesa runtime
 ```
 
+Windows:
+```
+TODO clang cmake make
+
+# Install Vcpkg
+# https://github.com/microsoft/vcpkg
+
+# Install required packages
+./vcpkg.exe --triplet=x64-windows install pthread
+
+# Install OpenCL (optional)
+./vcpkg.exe --triplet=x64-windows install opencl
+```
+
 ## Usage
 
 Compile:
@@ -29,5 +43,9 @@ make
 
 Run:
 ```
+# Linux
 ./neonbench
+
+# Windows
+./neonbench.exe
 ```

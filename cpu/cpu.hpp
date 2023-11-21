@@ -10,10 +10,10 @@
 #include "../benchmarked-object-float.hpp"
 
 #ifdef _WIN32
-    #define LIB_SCALAR "cpu/scalar.dll"
-    #define LIB_SSE "cpu/sse.dll"
-    #define LIB_AVX "cpu/avx.dll"
-    #define LIB_AVX512 "cpu/avx512f.dll"
+    #define LIB_SCALAR ".\\cpu\\neonbench_cpu_scalar.dll"
+    #define LIB_SSE ".\\cpu\\neonbench_cpu_sse.dll"
+    #define LIB_AVX ".\\cpu\\neonbench_cpu_avx.dll"
+    #define LIB_AVX512 ".\\cpu\\neonbench_cpu_avx512f.dll"
 #elif __APPLE__
     #define LIB_SCALAR "./cpu/scalar.dylib"
     #define LIB_SSE "./cpu/sse.dylib"

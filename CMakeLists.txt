@@ -3,21 +3,28 @@ project(neonbench)
 
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_FLAGS "-Wall -Wextra")
+set(CMAKE_C_FLAGS "-Wall -Wextra -fdeclspec")
 
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-# -fdeclspec
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -fdeclspec")
 
+# Set the vcpkg toolchain file
+set(CMAKE_TOOLCHAIN_FILE ./vcpkg/scripts/buildsystems/vcpkg.cmake)
+
+# Find OpenCL and CUDA
 find_package(OpenCL)
 find_package(CUDA)
 
-# build CPU libs
+# Build own CPU libs
 add_subdirectory(cpu)
 
-# check if OpenCL is available
+# Check if OpenCL is available
 if(OpenCL_FOUND)
+    if(WIN32)
+        include_directories(./vcpkg/packages/opencl_x64-windows/include)
+        link_directories(./vcpkg/packages/opencl_x64-windows/lib)
+    endif()
     add_compile_definitions(HAVE_OPENCL=1)
     message("OpenCL found, building with OpenCL support.")
 else()
@@ -49,24 +56,33 @@ add_executable(${PROJECT_NAME} benchmark.cpp)
 
 include_directories(${CMAKE_SOURCE_DIR}/cpu)
 
-# link libraries
+# Link own CPU libraries
 target_link_libraries(${PROJECT_NAME}
-    pthread
-    dl
     neonbench_cpu_scalar
     neonbench_cpu_sse
     neonbench_cpu_avx
     neonbench_cpu_avx512f
 )
 
-# link OpenCL library if available
+# Link pthread library
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME}
+        ./vcpkg/installed/x64-windows/lib/pthreadVC3
+    )
+else()
+    target_link_libraries(${PROJECT_NAME}
+        pthread
+    )
+endif()
+
+# Link OpenCL library if available
 if(OpenCL_FOUND)
     target_link_libraries(${PROJECT_NAME}
         OpenCL
     )
 endif()
 
-# link CUDA library if available
+# Link CUDA library if available
 if(CUDA_FOUND)
     target_link_libraries(${PROJECT_NAME}
         cuda_obj

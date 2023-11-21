@@ -16,9 +16,9 @@
     #include <stdio.h>
 #elif __APPLE__ || __linux__
     #include <dlfcn.h>
-
-    typedef void (*VECTOR_ADD) (const size_t, const float*, const float*, float*);
 #endif
+
+typedef void (*VECTOR_ADD) (const size_t, const float*, const float*, float*);
 
 void num_si_prefix(int64_t n, std::string *numStr) {
     std::stringstream ss;

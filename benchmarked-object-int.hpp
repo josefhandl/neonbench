@@ -16,9 +16,15 @@ public:
 
     BenchmarkedObjectInt(unsigned vectorSize, unsigned iterations, unsigned maxRnd)
             : vectorSize(vectorSize), iterations(iterations) {
-        this->vecA = static_cast<int*>(aligned_alloc(64, vectorSize * sizeof(float)));
-        this->vecB = static_cast<int*>(aligned_alloc(64, vectorSize * sizeof(float)));
-        this->vecR = static_cast<int*>(aligned_alloc(64, vectorSize * sizeof(float)));
+        #ifdef _WIN32
+        this->vecA = static_cast<int*>(_aligned_malloc(vectorSize * sizeof(int), 64));
+        this->vecB = static_cast<int*>(_aligned_malloc(vectorSize * sizeof(int), 64));
+        this->vecR = static_cast<int*>(_aligned_malloc(vectorSize * sizeof(int), 64));
+        #elif __APPLE__ || __linux__
+        this->vecA = static_cast<int*>(aligned_alloc(64, vectorSize * sizeof(int)));
+        this->vecB = static_cast<int*>(aligned_alloc(64, vectorSize * sizeof(int)));
+        this->vecR = static_cast<int*>(aligned_alloc(64, vectorSize * sizeof(int)));
+        #endif
 
         for (unsigned i = 0; i < vectorSize; ++i) {
             vecA[i] = static_cast<int>(rand() % maxRnd);

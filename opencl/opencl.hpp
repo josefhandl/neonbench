@@ -9,6 +9,13 @@
 #define CL_HPP_TARGET_OPENCL_VERSION 300
 
 #ifdef _WIN32
+    // https://github.com/microsoft/cppwinrt/issues/479
+    // https://stackoverflow.com/questions/1394132/macro-and-member-function-conflict
+    #ifdef max
+    #undef max
+    #endif
+
+    #include <CL/opencl.hpp>
 #elif __APPLE__
     #include <OpenCL/opencl.hpp>
 #elif __linux__
