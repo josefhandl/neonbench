@@ -14,6 +14,9 @@ cmake make clang libstdc++-12-dev
 
 # optional (OpenCL):
 # TODO opencl runtime for intel/amd cpu, nvidia/amd gpu
+ocl-icd-opencl-dev # OpenCL headers and libraries
+intel-opencl-icd # Intel GPU runtime
+mesa-opencl-icd # Mesa runtime
 ```
 
 ## Usage
