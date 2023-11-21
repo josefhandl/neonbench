@@ -1,5 +1,7 @@
 # Neonbench
 
+An attempt to create a CPU and GPU benchmark while learning the basics of GPU computing platforms and cross compilation.
+
 ## Requirements
 
 Ubuntu:
