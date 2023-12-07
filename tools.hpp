@@ -1,4 +1,7 @@
 
+#ifndef NEONBENCH_TOOLS_HPP
+#define NEONBENCH_TOOLS_HPP
+
 #include <string>
 #include <sstream>
 #include <math.h>
@@ -174,3 +177,5 @@ int64_t make_benchmark(
 
     return t.count();
 }
+
+#endif //NEONBENCH_TOOLS_HPP

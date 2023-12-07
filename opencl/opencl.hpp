@@ -3,6 +3,7 @@
 #include <vector>
 #include <fstream>
 
+#include "../tools.hpp"
 #include "../benchmarked-object-float.hpp"
 
 #define CL_HPP_ENABLE_EXCEPTIONS
@@ -127,6 +128,12 @@ public:
                 std::cout << "  OpenCL C version: " << device.getInfo<CL_DEVICE_OPENCL_C_VERSION>() << std::endl;
                 std::cout << "  Driver version: " << device.getInfo<CL_DRIVER_VERSION>() << std::endl;
                 std::cout << "  Compute Units: " << device.getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>() << std::endl;
+                std::cout << "  Memory bus size: " << device.getInfo<CL_DEVICE_ADDRESS_BITS>() << std::endl;
+
+                cl_ulong memSize = device.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>();
+                std::string memSizeStr;
+                num_bin_prefix((int64_t)memSize, &memSizeStr);
+                std::cout << "  Memory size: " << memSizeStr << std::endl;
 
                 std::cout << std::endl;
             }
