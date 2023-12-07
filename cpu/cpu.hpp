@@ -185,7 +185,7 @@ private:
         // benchmark
         int64_t points_s = compute_points(bo_singleThread->vectorSize, bo_singleThread->iterations, make_benchmark(libName, 1, *bo_singleThread), &points);
         benchmark_ok_s = test_benchmark(*bo_singleThread);
-        std::cout << (benchmark_ok_s ? points : "Failed") << "\t";
+        std::cout << (benchmark_ok_s ? points : "Invalid result") << "\t";
 
         // Multi-thread
         // heat up
@@ -193,7 +193,7 @@ private:
         // benchmark
         int64_t points_m = compute_points(bo_multiThread->vectorSize, bo_multiThread->iterations, make_benchmark(libName, cpuCores, *bo_multiThread), &points);
         benchmark_ok_m = test_benchmark(*bo_multiThread);
-        std::cout << (benchmark_ok_m ? points : "Failed");
+        std::cout << (benchmark_ok_m ? points : "Invalid result");
 
         if (benchmark_ok_s && benchmark_ok_m) {
             std::cout << "\t" << round((static_cast<double>(points_m) / static_cast<double>(points_s)) * 100.0) / 100.0 << "x";

@@ -150,16 +150,20 @@ public:
         std::string points;
 
         for (const cl::Device &device : cl_devices) {
-            std::cout << device.getInfo<CL_DEVICE_NAME>() << ": ";
+            try {
+                std::cout << device.getInfo<CL_DEVICE_NAME>() << ": ";
 
-            int64_t time;
-            for (int i = 0; i < 4; ++i) {
-                time = make_opencl_benchmark(device, bo->vectorSize, bo->iterations, bo->vecA, bo->vecB, bo->vecR);
+                int64_t time;
+                for (int i = 0; i < 4; ++i) {
+                    time = make_opencl_benchmark(device, bo->vectorSize, bo->iterations, bo->vecA, bo->vecB, bo->vecR);
+                }
+                compute_points(bo->vectorSize, bo->iterations, time, &points);
+
+                bool benchmark_ok = test_benchmark(*bo);
+                std::cout << (benchmark_ok ? points : "Invalid result") << std::endl;
+            } catch (cl::Error e) {
+                std::cout << "Failed" << std::endl;
             }
-            compute_points(bo->vectorSize, bo->iterations, time, &points);
-
-            bool benchmark_ok = test_benchmark(*bo);
-            std::cout << (benchmark_ok ? points : "Failed") << std::endl;
         }
 
         std::cout << std::endl;

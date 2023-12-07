@@ -57,7 +57,7 @@ public:
             compute_points(bo->vectorSize, bo->iterations, time, &points);
 
             bool benchmark_ok = test_benchmark(*bo);
-            std::cout << (benchmark_ok ? points : "Failed") << std::endl;
+            std::cout << (benchmark_ok ? points : "Invalid result") << std::endl;
         }
 
         std::cout << std::endl;
