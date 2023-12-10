@@ -1,6 +1,9 @@
 
+#include "neonbench-system.hpp"
+
 #include "cpu/cpu.hpp"
 #include "ram/ram.hpp"
+
 #ifdef HAVE_OPENCL
 #include "opencl/opencl.hpp"
 #endif
@@ -9,7 +12,8 @@
 #endif
 
 int main() {
-    ModuleCpu moduleCpu;
+    NeonbenchSystem moduleSystem;
+    ModuleCpu moduleCpu(moduleSystem);
     ModuleRam moduleRam;
 
     #ifdef HAVE_OPENCL
@@ -22,6 +26,7 @@ int main() {
     moduleCpu.inspect();
     moduleRam.inspect();
 
+    moduleSystem.printInfo();
     moduleCpu.printInfo();
     moduleRam.printInfo();
     #ifdef HAVE_OPENCL

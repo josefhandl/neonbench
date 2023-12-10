@@ -30,20 +30,6 @@
 #endif
 
 #ifdef _WIN32
-    #define NEONBENCH_OS 2
-#elif __APPLE__
-    #define NEONBENCH_OS 1
-#elif __linux__
-    #define NEONBENCH_OS 0
-#endif
-
-#ifdef __i386__ || __x86_64__
-    #define NEONBENCH_ARCH 0
-#elif __arm__ || __aarch64__
-    #define NEONBENCH_ARCH 1
-#endif
-
-#ifdef _WIN32
     //  Windows
     #include <intrin.h>
     void cpuid(int cpuInfo[4], int x) {
@@ -72,6 +58,8 @@
 class ModuleCpu {
 
 private:
+    const NeonbenchSystem &neonbenchSystem;
+
     std::unique_ptr<BenchmarkedObjectFloat> bo_singleThread;
     std::unique_ptr<BenchmarkedObjectFloat> bo_multiThread;
 
@@ -86,9 +74,6 @@ private:
     bool vmDetected = false;
     std::string vmName;
     char hyperVendorId[HYPER_VENDOR_ID_LENGTH] = {};
-
-    int os = NEONBENCH_OS;
-    int architecture = NEONBENCH_ARCH;
 
     void inspect_inst_sets() {
         // check sse, avx and avx512f support
@@ -221,6 +206,9 @@ private:
     }
 
 public:
+    ModuleCpu(const NeonbenchSystem &neonbenchSystem)
+            : neonbenchSystem(neonbenchSystem) {}
+
     void inspect() {
         inspect_inst_sets();
         inspect_cpu_name();
@@ -231,22 +219,6 @@ public:
     void printInfo() {
         std::cout << "CPU info:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
-
-        std::cout << "Architecture: ";
-        if (architecture == 0)
-            std::cout << "x86";
-        else if (architecture == 1)
-            std::cout << "arm";
-        std::cout << std::endl;
-
-        std::cout << "OS: ";
-        if (os == 2)
-            std::cout << "Windows";
-        else if (os == 1)
-            std::cout << "macOS";
-        else if (os == 0)
-            std::cout << "Linux";
-        std::cout << std::endl;
 
         std::cout << "CPU Name: " << cpuName << std::endl;
         std::cout << "CPUs (threads): " << cpuCores << std::endl;
@@ -276,7 +248,7 @@ public:
         launch_benchmark(LIB_SCALAR);
         std::cout << std::endl;
 
-        if (architecture == 0) {
+        if (neonbenchSystem.getArch() == NeonbenchSystemArch::X86) {
             // SSE
             //---------
             std::cout << "SSE:    ";
@@ -303,7 +275,7 @@ public:
             else
                 std::cout << "Not supported";
             std::cout << std::endl;
-        } else if (architecture == 1) {
+        } else if (neonbenchSystem.getArch() == NeonbenchSystemArch::Arm) {
             // NEON
             //---------
             std::cout << "NEON: ";
