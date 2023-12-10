@@ -29,9 +29,6 @@
     #define LIB_NEON "./cpu/libneonbench_cpu_neon.so"
 #endif
 
-void cpuid(int cpuInfo[4], int InfoType) {
-}
-
 #if defined(__i386__) || defined(__x86_64__)
     #ifdef _WIN32
         //  Windows
@@ -46,6 +43,9 @@ void cpuid(int cpuInfo[4], int InfoType) {
             __cpuid_count(InfoType, 0, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
         }
     #endif
+#else
+    void cpuid(int cpuInfo[4], int InfoType) {
+    }
 #endif
 
 #ifdef _WIN32
