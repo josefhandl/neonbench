@@ -14,29 +14,37 @@
     #define LIB_SSE ".\\cpu\\neonbench_cpu_sse.dll"
     #define LIB_AVX ".\\cpu\\neonbench_cpu_avx.dll"
     #define LIB_AVX512 ".\\cpu\\neonbench_cpu_avx512f.dll"
+    #define LIB_NEON ".\\cpu\\neonbench_cpu_neon.dll"
 #elif __APPLE__
     #define LIB_SCALAR "./cpu/scalar.dylib"
     #define LIB_SSE "./cpu/sse.dylib"
     #define LIB_AVX "./cpu/avx.dylib"
     #define LIB_AVX512 "./cpu/avx512f.dylib"
+    #define LIB_NEON "./cpu/neon.dylib"
 #elif __linux__
     #define LIB_SCALAR "./cpu/libneonbench_cpu_scalar.so"
     #define LIB_SSE "./cpu/libneonbench_cpu_sse.so"
     #define LIB_AVX "./cpu/libneonbench_cpu_avx.so"
     #define LIB_AVX512 "./cpu/libneonbench_cpu_avx512f.so"
+    #define LIB_NEON "./cpu/libneonbench_cpu_neon.so"
 #endif
 
-#ifdef _WIN32
-    //  Windows
-    #include <intrin.h>
-    void cpuid(int cpuInfo[4], int x) {
-        __cpuid(cpuInfo, x);
-    }
-#elif __APPLE__ || __linux__
-    //  GCC Intrinsics
-    #include <cpuid.h>
+#if defined(__i386__) || defined(__x86_64__)
+    #ifdef _WIN32
+        //  Windows
+        #include <intrin.h>
+        void cpuid(int cpuInfo[4], int x) {
+            __cpuid(cpuInfo, x);
+        }
+    #elif __APPLE__ || __linux__
+        //  GCC Intrinsics
+        #include <cpuid.h>
+        void cpuid(int cpuInfo[4], int InfoType) {
+            __cpuid_count(InfoType, 0, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+        }
+    #endif
+#else
     void cpuid(int cpuInfo[4], int InfoType) {
-        __cpuid_count(InfoType, 0, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
     }
 #endif
 
@@ -55,6 +63,8 @@
 class ModuleCpu {
 
 private:
+    const NeonbenchSystem &neonbenchSystem;
+
     std::unique_ptr<BenchmarkedObjectFloat> bo_singleThread;
     std::unique_ptr<BenchmarkedObjectFloat> bo_multiThread;
 
@@ -201,16 +211,23 @@ private:
     }
 
 public:
+    ModuleCpu(const NeonbenchSystem &neonbenchSystem)
+            : neonbenchSystem(neonbenchSystem) {}
+
     void inspect() {
-        inspect_inst_sets();
-        inspect_cpu_name();
         inspect_cpu_cores();
-        inspect_hypervisor_presence();
+
+        if (neonbenchSystem.getArch() == NeonbenchSystemArch::X86) {
+            inspect_inst_sets();
+            inspect_cpu_name();
+            inspect_hypervisor_presence();
+        }
     }
 
     void printInfo() {
         std::cout << "CPU info:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
+
         std::cout << "CPU Name: " << cpuName << std::endl;
         std::cout << "CPUs (threads): " << cpuCores << std::endl;
 
@@ -239,32 +256,43 @@ public:
         launch_benchmark(LIB_SCALAR);
         std::cout << std::endl;
 
-        // SSE
-        //---------
-        std::cout << "SSE:    ";
-        if (hw_sse)
-            launch_benchmark(LIB_SSE);
-        else
-            std::cout << "Not supported";
-        std::cout << std::endl;
+        if (neonbenchSystem.getArch() == NeonbenchSystemArch::X86) {
+            // SSE
+            //---------
+            std::cout << "SSE:    ";
+            if (hw_sse)
+                launch_benchmark(LIB_SSE);
+            else
+                std::cout << "Not supported";
+            std::cout << std::endl;
 
-        // AVX
-        //---------
-        std::cout << "AVX:    ";
-        if (hw_avx)
-            launch_benchmark(LIB_AVX);
-        else
-            std::cout << "Not supported";
-        std::cout << std::endl;
+            // AVX
+            //---------
+            std::cout << "AVX:    ";
+            if (hw_avx)
+                launch_benchmark(LIB_AVX);
+            else
+                std::cout << "Not supported";
+            std::cout << std::endl;
 
-        // AVX512
-        //---------
-        std::cout << "AVX512: ";
-        if (hw_avx512f)
-            launch_benchmark(LIB_AVX512);
-        else
-            std::cout << "Not supported";
-        std::cout << std::endl;
+            // AVX512
+            //---------
+            std::cout << "AVX512: ";
+            if (hw_avx512f)
+                launch_benchmark(LIB_AVX512);
+            else
+                std::cout << "Not supported";
+            std::cout << std::endl;
+        } else if (neonbenchSystem.getArch() == NeonbenchSystemArch::Arm) {
+            // NEON
+            //---------
+            std::cout << "NEON: ";
+            if (true)
+                launch_benchmark(LIB_NEON);
+            else
+                std::cout << "Not supported";
+            std::cout << std::endl;
+        }
 
         std::cout << std::endl;
     }

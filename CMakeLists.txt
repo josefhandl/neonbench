@@ -56,13 +56,23 @@ add_executable(${PROJECT_NAME} benchmark.cpp)
 
 include_directories(${CMAKE_SOURCE_DIR}/cpu)
 
-# Link own CPU libraries
+# Link own CPU lib
 target_link_libraries(${PROJECT_NAME}
     neonbench_cpu_scalar
-    neonbench_cpu_sse
-    neonbench_cpu_avx
-    neonbench_cpu_avx512f
 )
+
+# Link own architecture specific CPU libs
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm*|aarch64*")
+    target_link_libraries(${PROJECT_NAME}
+        neonbench_cpu_neon
+    )
+elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64*|x86*")
+    target_link_libraries(${PROJECT_NAME}
+        neonbench_cpu_sse
+        neonbench_cpu_avx
+        neonbench_cpu_avx512f
+    )
+endif()
 
 # Link pthread library
 if(WIN32)

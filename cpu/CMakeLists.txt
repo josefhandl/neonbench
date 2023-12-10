@@ -12,44 +12,67 @@ set_target_properties(neonbench_cpu_scalar PROPERTIES
 )
 target_compile_definitions(neonbench_cpu_scalar PRIVATE)
 
-# SSE
+# ARM
 #=======
 
-add_library(neonbench_cpu_sse SHARED sse.cpp)
-set_target_properties(neonbench_cpu_sse PROPERTIES
-    POSITION_INDEPENDENT_CODE ON
-)
-target_compile_definitions(neonbench_cpu_sse PRIVATE
-    -D__SSE__
-)
-target_compile_options(neonbench_cpu_sse PRIVATE
-    -msse
-)
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm*|aarch64*")
 
-# AVX
+    # NEON
+    #--------
+
+    add_library(neonbench_cpu_neon SHARED neon.cpp)
+    set_target_properties(neonbench_cpu_neon PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+    )
+    target_compile_definitions(neonbench_cpu_neon PRIVATE
+        -D__ARM_NEON
+    )
+
+# x86
 #=======
 
-add_library(neonbench_cpu_avx SHARED avx.cpp)
-set_target_properties(neonbench_cpu_avx PROPERTIES
-    POSITION_INDEPENDENT_CODE ON
-)
-target_compile_definitions(neonbench_cpu_avx PRIVATE
-    -D__AVX__
-)
-target_compile_options(neonbench_cpu_avx PRIVATE
-    -mavx
-)
+elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64*|x86*")
 
-# AVX512f
-#===========
+    # SSE
+    #=======
 
-add_library(neonbench_cpu_avx512f SHARED avx512f.cpp)
-set_target_properties(neonbench_cpu_avx512f PROPERTIES
-    POSITION_INDEPENDENT_CODE ON
-)
-target_compile_definitions(neonbench_cpu_avx512f PRIVATE
-    -D__AVX512F__
-)
-target_compile_options(neonbench_cpu_avx512f PRIVATE
-    -mavx512f
-)
+    add_library(neonbench_cpu_sse SHARED sse.cpp)
+    set_target_properties(neonbench_cpu_sse PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+    )
+    target_compile_definitions(neonbench_cpu_sse PRIVATE
+        -D__SSE__
+    )
+    target_compile_options(neonbench_cpu_sse PRIVATE
+        -msse
+    )
+
+    # AVX
+    #=======
+
+    add_library(neonbench_cpu_avx SHARED avx.cpp)
+    set_target_properties(neonbench_cpu_avx PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+    )
+    target_compile_definitions(neonbench_cpu_avx PRIVATE
+        -D__AVX__
+    )
+    target_compile_options(neonbench_cpu_avx PRIVATE
+        -mavx
+    )
+
+    # AVX512f
+    #===========
+
+    add_library(neonbench_cpu_avx512f SHARED avx512f.cpp)
+    set_target_properties(neonbench_cpu_avx512f PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+    )
+    target_compile_definitions(neonbench_cpu_avx512f PRIVATE
+        -D__AVX512F__
+    )
+    target_compile_options(neonbench_cpu_avx512f PRIVATE
+        -mavx512f
+    )
+
+endif()
