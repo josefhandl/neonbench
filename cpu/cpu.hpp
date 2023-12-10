@@ -14,16 +14,33 @@
     #define LIB_SSE ".\\cpu\\neonbench_cpu_sse.dll"
     #define LIB_AVX ".\\cpu\\neonbench_cpu_avx.dll"
     #define LIB_AVX512 ".\\cpu\\neonbench_cpu_avx512f.dll"
+    #define LIB_NEON ".\\cpu\\neonbench_cpu_neon.dll"
 #elif __APPLE__
     #define LIB_SCALAR "./cpu/scalar.dylib"
     #define LIB_SSE "./cpu/sse.dylib"
     #define LIB_AVX "./cpu/avx.dylib"
     #define LIB_AVX512 "./cpu/avx512f.dylib"
+    #define LIB_NEON "./cpu/neon.dylib"
 #elif __linux__
     #define LIB_SCALAR "./cpu/libneonbench_cpu_scalar.so"
     #define LIB_SSE "./cpu/libneonbench_cpu_sse.so"
     #define LIB_AVX "./cpu/libneonbench_cpu_avx.so"
     #define LIB_AVX512 "./cpu/libneonbench_cpu_avx512f.so"
+    #define LIB_NEON "./cpu/libneonbench_cpu_neon.so"
+#endif
+
+#ifdef _WIN32
+    #define NEONBENCH_OS 2
+#elif __APPLE__
+    #define NEONBENCH_OS 1
+#elif __linux__
+    #define NEONBENCH_OS 0
+#endif
+
+#ifdef __i386__ || __x86_64__
+    #define NEONBENCH_ARCH 0
+#elif __arm__ || __aarch64__
+    #define NEONBENCH_ARCH 1
 #endif
 
 #ifdef _WIN32
@@ -69,6 +86,9 @@ private:
     bool vmDetected = false;
     std::string vmName;
     char hyperVendorId[HYPER_VENDOR_ID_LENGTH] = {};
+
+    int os = NEONBENCH_OS;
+    int architecture = NEONBENCH_ARCH;
 
     void inspect_inst_sets() {
         // check sse, avx and avx512f support
@@ -211,6 +231,23 @@ public:
     void printInfo() {
         std::cout << "CPU info:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
+
+        std::cout << "Architecture: ";
+        if (architecture == 0)
+            std::cout << "x86";
+        else if (architecture == 1)
+            std::cout << "arm";
+        std::cout << std::endl;
+
+        std::cout << "OS: ";
+        if (os == 2)
+            std::cout << "Windows";
+        else if (os == 1)
+            std::cout << "macOS";
+        else if (os == 0)
+            std::cout << "Linux";
+        std::cout << std::endl;
+
         std::cout << "CPU Name: " << cpuName << std::endl;
         std::cout << "CPUs (threads): " << cpuCores << std::endl;
 
@@ -239,32 +276,43 @@ public:
         launch_benchmark(LIB_SCALAR);
         std::cout << std::endl;
 
-        // SSE
-        //---------
-        std::cout << "SSE:    ";
-        if (hw_sse)
-            launch_benchmark(LIB_SSE);
-        else
-            std::cout << "Not supported";
-        std::cout << std::endl;
+        if (architecture == 0) {
+            // SSE
+            //---------
+            std::cout << "SSE:    ";
+            if (hw_sse)
+                launch_benchmark(LIB_SSE);
+            else
+                std::cout << "Not supported";
+            std::cout << std::endl;
 
-        // AVX
-        //---------
-        std::cout << "AVX:    ";
-        if (hw_avx)
-            launch_benchmark(LIB_AVX);
-        else
-            std::cout << "Not supported";
-        std::cout << std::endl;
+            // AVX
+            //---------
+            std::cout << "AVX:    ";
+            if (hw_avx)
+                launch_benchmark(LIB_AVX);
+            else
+                std::cout << "Not supported";
+            std::cout << std::endl;
 
-        // AVX512
-        //---------
-        std::cout << "AVX512: ";
-        if (hw_avx512f)
-            launch_benchmark(LIB_AVX512);
-        else
-            std::cout << "Not supported";
-        std::cout << std::endl;
+            // AVX512
+            //---------
+            std::cout << "AVX512: ";
+            if (hw_avx512f)
+                launch_benchmark(LIB_AVX512);
+            else
+                std::cout << "Not supported";
+            std::cout << std::endl;
+        } else if (architecture == 1) {
+            // NEON
+            //---------
+            std::cout << "NEON: ";
+            if (true)
+                launch_benchmark(LIB_NEON);
+            else
+                std::cout << "Not supported";
+            std::cout << std::endl;
+        }
 
         std::cout << std::endl;
     }
