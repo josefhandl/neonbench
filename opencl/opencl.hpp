@@ -133,7 +133,24 @@ public:
                 cl_ulong memSize = device.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>();
                 std::string memSizeStr;
                 num_bin_prefix((int64_t)memSize, &memSizeStr);
-                std::cout << "  Memory size: " << memSizeStr << std::endl;
+                std::cout << "  Memory size: " << memSizeStr << "B" << std::endl;
+
+                // Get extensions
+                std::string extensions;
+                device.getInfo(CL_DEVICE_EXTENSIONS, &extensions);
+
+                // Print USM support
+                std::cout << "  Unified Shared Memory: ";
+                if (extensions.find("cl_intel_unified_shared_memory") != std::string::npos) {
+                    std::cout << "Supported (Intel)" << std::endl;
+                } else if (extensions.find("cl_amd_bus_addressable_memory") != std::string::npos) {
+                    std::cout << "Supported (AMD)" << std::endl;
+                } else {
+                    std::cout << "Not supported" << std::endl;
+                }
+
+                // Print Extensions
+                //std::cout << "  Extensions: " << extensions << std::endl;
 
                 std::cout << std::endl;
             }
