@@ -236,10 +236,7 @@ public:
         // Scalar
         //---------
         std::cout << "Scalar: ";
-        if (hw_sse)
-            launch_benchmark(LIB_SCALAR);
-        else
-            std::cout << "Not supported";
+        launch_benchmark(LIB_SCALAR);
         std::cout << std::endl;
 
         // SSE
