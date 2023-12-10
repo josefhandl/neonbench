@@ -29,18 +29,23 @@
     #define LIB_NEON "./cpu/libneonbench_cpu_neon.so"
 #endif
 
-#ifdef _WIN32
-    //  Windows
-    #include <intrin.h>
-    void cpuid(int cpuInfo[4], int x) {
-        __cpuid(cpuInfo, x);
-    }
-#elif __APPLE__ || __linux__
-    //  GCC Intrinsics
-    #include <cpuid.h>
-    void cpuid(int cpuInfo[4], int InfoType) {
-        __cpuid_count(InfoType, 0, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
-    }
+void cpuid(int cpuInfo[4], int InfoType) {
+}
+
+#if defined(__i386__) || defined(__x86_64__)
+    #ifdef _WIN32
+        //  Windows
+        #include <intrin.h>
+        void cpuid(int cpuInfo[4], int x) {
+            __cpuid(cpuInfo, x);
+        }
+    #elif __APPLE__ || __linux__
+        //  GCC Intrinsics
+        #include <cpuid.h>
+        void cpuid(int cpuInfo[4], int InfoType) {
+            __cpuid_count(InfoType, 0, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+        }
+    #endif
 #endif
 
 #ifdef _WIN32
@@ -210,10 +215,13 @@ public:
             : neonbenchSystem(neonbenchSystem) {}
 
     void inspect() {
-        inspect_inst_sets();
-        inspect_cpu_name();
         inspect_cpu_cores();
-        inspect_hypervisor_presence();
+
+        if (neonbenchSystem.getArch() == NeonbenchSystemArch::X86) {
+            inspect_inst_sets();
+            inspect_cpu_name();
+            inspect_hypervisor_presence();
+        }
     }
 
     void printInfo() {
