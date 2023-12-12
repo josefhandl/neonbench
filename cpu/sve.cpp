@@ -1,4 +1,5 @@
 #include <arm_sve.h>
+#include <stdio.h>
 
 #ifdef _WIN32
 #define WIN_DLL_EX __declspec(dllexport)
