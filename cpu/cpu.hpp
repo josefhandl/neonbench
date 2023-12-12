@@ -15,18 +15,21 @@
     #define LIB_AVX ".\\cpu\\neonbench_cpu_avx.dll"
     #define LIB_AVX512 ".\\cpu\\neonbench_cpu_avx512f.dll"
     #define LIB_NEON ".\\cpu\\neonbench_cpu_neon.dll"
+    #define LIB_SVE ".\\cpu\\neonbench_cpu_sve.dll"
 #elif __APPLE__
     #define LIB_SCALAR "./cpu/scalar.dylib"
     #define LIB_SSE "./cpu/sse.dylib"
     #define LIB_AVX "./cpu/avx.dylib"
     #define LIB_AVX512 "./cpu/avx512f.dylib"
     #define LIB_NEON "./cpu/neon.dylib"
+    #define LIB_SVE "./cpu/sve.dylib"
 #elif __linux__
     #define LIB_SCALAR "./cpu/libneonbench_cpu_scalar.so"
     #define LIB_SSE "./cpu/libneonbench_cpu_sse.so"
     #define LIB_AVX "./cpu/libneonbench_cpu_avx.so"
     #define LIB_AVX512 "./cpu/libneonbench_cpu_avx512f.so"
     #define LIB_NEON "./cpu/libneonbench_cpu_neon.so"
+    #define LIB_SVE "./cpu/libneonbench_cpu_sve.so"
 #endif
 
 #if defined(__i386__) || defined(__x86_64__)
@@ -289,6 +292,15 @@ public:
             std::cout << "NEON: ";
             if (true)
                 launch_benchmark(LIB_NEON);
+            else
+                std::cout << "Not supported";
+            std::cout << std::endl;
+
+            // SVE
+            //---------
+            std::cout << "SVE: ";
+            if (true)
+                launch_benchmark(LIB_SVE);
             else
                 std::cout << "Not supported";
             std::cout << std::endl;

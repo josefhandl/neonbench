@@ -28,6 +28,17 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm*|aarch64*")
         -D__ARM_NEON
     )
 
+    # SVE
+    #--------
+
+    add_library(neonbench_cpu_sve SHARED sve.cpp)
+    set_target_properties(neonbench_cpu_sve PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+    )
+    target_compile_definitions(neonbench_cpu_sve PRIVATE
+        -D__ARM_SVE
+    )
+
 # x86
 #=======
 

@@ -65,6 +65,7 @@ target_link_libraries(${PROJECT_NAME}
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm*|aarch64*")
     target_link_libraries(${PROJECT_NAME}
         neonbench_cpu_neon
+        neonbench_cpu_sve
     )
 elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64*|x86*")
     target_link_libraries(${PROJECT_NAME}
