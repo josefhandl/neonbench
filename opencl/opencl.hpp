@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <exception>
 
 #include "../tools.hpp"
 #include "../benchmarked-object-float.hpp"
@@ -174,9 +175,9 @@ public:
         std::string points;
 
         for (const cl::Device &device : cl_devices) {
-            try {
-                std::cout << device.getInfo<CL_DEVICE_NAME>() << ": ";
+            std::cout << device.getInfo<CL_DEVICE_NAME>() << ": " << std::flush;
 
+            try {
                 int64_t time;
                 for (int i = 0; i < 4; ++i) {
                     time = make_opencl_benchmark(device, bo->vectorSize, bo->iterations, bo->vecA, bo->vecB, bo->vecR);
@@ -185,8 +186,9 @@ public:
 
                 bool benchmark_ok = test_benchmark(*bo);
                 std::cout << (benchmark_ok ? points : "Invalid result") << std::endl;
-            } catch (cl::Error e) {
+            } catch (std::exception e) {
                 std::cout << "Failed" << std::endl;
+                std::cout << e.what() << std::endl;
             }
         }
 

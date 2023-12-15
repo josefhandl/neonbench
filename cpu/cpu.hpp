@@ -195,7 +195,7 @@ private:
         // benchmark
         int64_t points_s = compute_points(bo_singleThread->vectorSize, bo_singleThread->iterations, make_benchmark(libName, 1, *bo_singleThread), &points);
         benchmark_ok_s = test_benchmark(*bo_singleThread);
-        std::cout << (benchmark_ok_s ? points : "Invalid result") << "\t";
+        std::cout << (benchmark_ok_s ? points : "Invalid result") << "\t" << std::flush;
 
         // Multi-thread
         // heat up
@@ -203,10 +203,10 @@ private:
         // benchmark
         int64_t points_m = compute_points(bo_multiThread->vectorSize, bo_multiThread->iterations, make_benchmark(libName, cpuCores, *bo_multiThread), &points);
         benchmark_ok_m = test_benchmark(*bo_multiThread);
-        std::cout << (benchmark_ok_m ? points : "Invalid result");
+        std::cout << (benchmark_ok_m ? points : "Invalid result") << std::flush;
 
         if (benchmark_ok_s && benchmark_ok_m) {
-            std::cout << "\t" << round((static_cast<double>(points_m) / static_cast<double>(points_s)) * 100.0) / 100.0 << "x";
+            std::cout << "\t" << round((static_cast<double>(points_m) / static_cast<double>(points_s)) * 100.0) / 100.0 << "x" << std::flush;
         }
     }
 
@@ -252,14 +252,14 @@ public:
 
         // Scalar
         //---------
-        std::cout << "Scalar: ";
+        std::cout << "Scalar: " << std::flush;
         launch_benchmark(LIB_SCALAR);
         std::cout << std::endl;
 
         if (neonbenchSystem.getArch() == NeonbenchSystemArch::X86) {
             // SSE
             //---------
-            std::cout << "SSE:    ";
+            std::cout << "SSE:    " << std::flush;
             if (hw_sse)
                 launch_benchmark(LIB_SSE);
             else
@@ -268,7 +268,7 @@ public:
 
             // AVX
             //---------
-            std::cout << "AVX:    ";
+            std::cout << "AVX:    " << std::flush;
             if (hw_avx)
                 launch_benchmark(LIB_AVX);
             else
@@ -277,7 +277,7 @@ public:
 
             // AVX512
             //---------
-            std::cout << "AVX512: ";
+            std::cout << "AVX512: " << std::flush;
             if (hw_avx512f)
                 launch_benchmark(LIB_AVX512);
             else
@@ -286,7 +286,7 @@ public:
         } else if (neonbenchSystem.getArch() == NeonbenchSystemArch::Arm) {
             // NEON
             //---------
-            std::cout << "NEON: ";
+            std::cout << "NEON: " << std::flush;
             if (true)
                 launch_benchmark(LIB_NEON);
             else

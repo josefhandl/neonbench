@@ -65,7 +65,7 @@ public:
 
         // Random
         //----------------
-        std::cout << "Random: ";
+        std::cout << "Random: " << std::flush;
         // Random read
         sum = 0;
 
@@ -81,7 +81,7 @@ public:
         auto t = std::chrono::duration_cast<std::chrono::microseconds>(e - s);
 
         compute_points(bo->vectorSize, bo->iterations, t.count(), &points);
-        std::cout << "Read: " << points;
+        std::cout << "Read: " << points << std::flush;
 
         // Random write
         volatile int magicValue = 0;
@@ -98,12 +98,12 @@ public:
         t = std::chrono::duration_cast<std::chrono::microseconds>(e - s);
 
         compute_points(bo->vectorSize, bo->iterations, t.count(), &points);
-        std::cout << "\t Write: " << points;
+        std::cout << "\t Write: " << points << std::flush;
         std::cout << std::endl;
 
         // Sequential
         //----------------
-        std::cout << "Sequential: ";
+        std::cout << "Sequential: " << std::flush;
         // Sequential read
         sum = 0;
 
@@ -120,7 +120,7 @@ public:
         t = std::chrono::duration_cast<std::chrono::microseconds>(e - s);
 
         compute_points(bo->vectorSize, bo->iterations, t.count(), &points);
-        std::cout << "Read: " << points;
+        std::cout << "Read: " << points << std::flush;
 
         // Sequential write
         magicValue = 0;
@@ -138,7 +138,7 @@ public:
         t = std::chrono::duration_cast<std::chrono::microseconds>(e - s);
 
         compute_points(bo->vectorSize, bo->iterations, t.count(), &points);
-        std::cout << "\t Write: " << points;
+        std::cout << "\t Write: " << points << std::flush;
         std::cout << std::endl;
 
         std::cout << std::endl;
