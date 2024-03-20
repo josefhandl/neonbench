@@ -194,9 +194,12 @@ public:
 
                 bool benchmark_ok = test_benchmark(*bo);
                 std::cout << (benchmark_ok ? points : "Invalid result") << std::endl;
-            } catch (std::exception e) {
+            } catch (const cl::Error &err) {
                 std::cout << "Failed" << std::endl;
-                std::cout << e.what() << std::endl;
+                std::cerr << "OpenCL error occurred: " << err.what() << " (code " << err.err() << ")" << std::endl;
+            } catch (std::exception &e) {
+                std::cout << "Failed" << std::endl;
+                std::cerr << "An exception occurred: " << e.what() << std::endl;
             }
         }
 
