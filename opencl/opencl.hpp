@@ -4,6 +4,7 @@
 #include <fstream>
 #include <exception>
 
+#include "../neonbench-module.hpp"
 #include "../tools.hpp"
 #include "../benchmarked-object-float.hpp"
 
@@ -31,7 +32,7 @@
 #define KERNEL_FILE "opencl/kernel.cl"
 #define KERNEL_FUNCTION "vector_add"
 
-class ModuleOpencl {
+class ModuleOpencl : public NeonbenchModule {
 
 private:
     std::unique_ptr<BenchmarkedObjectFloat> bo;
@@ -84,7 +85,14 @@ private:
     }
 
 public:
-    void printInfo() {
+    NeonbenchDevice getDeviceType() override {
+        return NeonbenchDevice::gpu;
+    }
+
+    void inspect() override {
+    }
+
+    void printInfo() override {
         std::cout << "OpenCL info:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
 
@@ -164,11 +172,11 @@ public:
         std::cout << std::endl;
     }
 
-    void benchmark_prepare(unsigned size, unsigned iterations) {
+    void benchmark_prepare(unsigned size, unsigned iterations) override {
         bo = std::make_unique<BenchmarkedObjectFloat>(size, iterations);
     }
 
-    void benchmark() {
+    void benchmark() override {
         std::cout << "OpenCL Benchmark:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
 

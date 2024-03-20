@@ -4,6 +4,7 @@
 #include <fstream>
 #include <memory>
 
+#include "../neonbench-module.hpp"
 #include "../benchmarked-object-float.hpp"
 
 #ifdef _WIN32
@@ -16,7 +17,7 @@ extern "C" void cu_printInfo(int &deviceCount);
 
 //https://github.com/zchee/cuda-sample/blob/master/1_Utilities/deviceQuery/deviceQuery.cpp
 
-class ModuleCuda {
+class ModuleCuda : public NeonbenchModule {
 
 private:
     std::unique_ptr<BenchmarkedObjectFloat> bo;
@@ -28,7 +29,14 @@ private:
     }
 
 public:
-    void printInfo() {
+    NeonbenchDevice getDeviceType() override {
+        return NeonbenchDevice::gpu;
+    }
+
+    void inspect() override {
+    }
+
+    void printInfo() override {
         std::cout << "CUDA info:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
         
@@ -37,11 +45,11 @@ public:
         std::cout << std::endl;
     }
 
-    void benchmark_prepare(unsigned size, unsigned iterations) {
+    void benchmark_prepare(unsigned size, unsigned iterations) override {
         bo = std::make_unique<BenchmarkedObjectFloat>(size, iterations);
     }
 
-    void benchmark() {
+    void benchmark() override {
         std::cout << "CUDA benchmark:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
 

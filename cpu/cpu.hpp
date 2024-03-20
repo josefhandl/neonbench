@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "../tools.hpp"
+#include "../neonbench-module.hpp"
 #include "../benchmarked-object-float.hpp"
 
 #ifdef _WIN32
@@ -60,7 +61,7 @@
 
 #define HYPER_VENDOR_ID_LENGTH 13
 
-class ModuleCpu {
+class ModuleCpu : public NeonbenchModule {
 
 private:
     const NeonbenchSystem &neonbenchSystem;
@@ -214,7 +215,11 @@ public:
     ModuleCpu(const NeonbenchSystem &neonbenchSystem)
             : neonbenchSystem(neonbenchSystem) {}
 
-    void inspect() {
+    NeonbenchDevice getDeviceType() override {
+        return NeonbenchDevice::cpu;
+    }
+
+    void inspect() override {
         inspect_cpu_cores();
 
         if (neonbenchSystem.getArch() == NeonbenchSystemArch::X86) {
@@ -224,7 +229,7 @@ public:
         }
     }
 
-    void printInfo() {
+    void printInfo() override {
         std::cout << "CPU info:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
 
@@ -240,12 +245,12 @@ public:
         std::cout << std::endl << std::endl;
     }
 
-    void benchmark_prepare(unsigned size, unsigned iterations) {
+    void benchmark_prepare(unsigned size, unsigned iterations) override {
         bo_singleThread = std::make_unique<BenchmarkedObjectFloat>(size, iterations);
         bo_multiThread = std::make_unique<BenchmarkedObjectFloat>(size*cpuCores, iterations);
     }
 
-    void benchmark() {
+    void benchmark() override {
         std::cout << "CPU benchmark:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
         std::cout << "\tST\tMT" << std::endl;

@@ -1,9 +1,10 @@
 
 #include <string>
 
+#include "../neonbench-module.hpp"
 #include "../benchmarked-object-int.hpp"
 
-class ModuleRam {
+class ModuleRam : public NeonbenchModule {
 private:
     std::unique_ptr<BenchmarkedObjectInt> bo;
 
@@ -34,11 +35,15 @@ private:
     }
 
 public:
-    void inspect() {
+    NeonbenchDevice getDeviceType() override {
+        return NeonbenchDevice::ram;
+    }
+
+    void inspect() override {
         inspect_ram_size();
     }
 
-    void printInfo() {
+    void printInfo() override {
         std::cout << "RAM info:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
         std::string ramSizeStr;
@@ -51,11 +56,11 @@ public:
         std::cout << std::endl;
     }
 
-    void benchmark_prepare(unsigned size, unsigned iterations) {
+    void benchmark_prepare(unsigned size, unsigned iterations) override {
         bo = std::make_unique<BenchmarkedObjectInt>(size, iterations, size);
     }
 
-    void benchmark() {
+    void benchmark() override {
         std::cout << "RAM benchmark:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
 
