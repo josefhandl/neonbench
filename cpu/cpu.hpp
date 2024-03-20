@@ -291,7 +291,7 @@ public:
         } else if (neonbenchSystem.getArch() == NeonbenchSystemArch::Arm) {
             // NEON
             //---------
-            std::cout << "NEON: " << std::flush;
+            std::cout << "NEON:   " << std::flush;
             if (true)
                 launch_benchmark(LIB_NEON);
             else
