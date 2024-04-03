@@ -9,6 +9,7 @@
 #include "../tools.hpp"
 #include "../neonbench-module.hpp"
 #include "../benchmarked-object-float.hpp"
+#include "dictionary.hpp"
 
 #ifdef _WIN32
     #define LIB_SCALAR ".\\cpu\\neonbench_cpu_scalar.dll"
@@ -59,7 +60,8 @@
     #include <sys/sysinfo.h> // get memory size
 #endif
 
-#define HYPER_VENDOR_ID_LENGTH 13
+#define CPUID_VENDOR_ID_LENGTH 13
+
 
 class ModuleCpu : public NeonbenchModule {
 
@@ -77,9 +79,11 @@ private:
     std::string cpuName;
     unsigned cpuCores;
 
-    bool vmDetected = false;
-    std::string vmName;
-    char hyperVendorId[HYPER_VENDOR_ID_LENGTH] = {};
+    // VM
+    bool hvPresentBitSet_ = false;
+    bool hvVendorStringSet_ = false;
+    std::string hvVendorName_;
+    char hvVendorId_[CPUID_VENDOR_ID_LENGTH] = {};
 
     void inspect_inst_sets() {
         // check sse, avx and avx512f support
@@ -87,30 +91,63 @@ private:
         //https://stackoverflow.com/questions/6121792/how-to-check-if-a-cpu-supports-the-sse3-instruction-set
         //https://github.com/Mysticial/FeatureDetector
 
-        int cpuInfo[4];
-        cpuid(cpuInfo, 0);
-        int nIds = cpuInfo[0];
+        int reg_eflags[4] = { 0 }; // { EAX, EBX, ECX, EDX }
+        int &r_eax = reg_eflags[0];
+        int &r_ebx = reg_eflags[1];
+        int &r_ecx = reg_eflags[2];
+        int &r_edx = reg_eflags[3];
 
-        cpuid(cpuInfo, 0x80000000);
-        //unsigned nExIds = cpuInfo[0]; // TODO github, feature detector
+        cpuid(reg_eflags, CPUID_MAGIC_QUERY_BASIC_INFO);
+        int nIds = r_eax;
+
+        cpuid(reg_eflags, CPUID_MAGIC_QUERY_EXTENDED_INFO);
 
         if (nIds >= 0x00000001){
-            cpuid(cpuInfo,0x00000001);
-            hw_sse = (cpuInfo[3] & ((int)1 << 25)) != 0;
-            hw_avx = (cpuInfo[2] & ((int)1 << 28)) != 0;
+            cpuid(reg_eflags,0x00000001);
+            hw_sse = (r_edx & ((int)1 << 25)) != 0;
+            hw_avx = (r_ecx & ((int)1 << 28)) != 0;
         }
 
         if (nIds >= 0x00000007){
-            cpuid(cpuInfo,0x00000007);
+            cpuid(reg_eflags,0x00000007);
             //hw_avx2    = (cpuInfo[1] & ((int)1 <<  5)) != 0;
-            hw_avx512f = (cpuInfo[1] & ((int)1 << 16)) != 0;
+            hw_avx512f = (r_ebx & ((int)1 << 16)) != 0;
         }
     }
+
+    /*
+    void inspect_topology() {
+        int reg_eflags[4] = { 0 }; // { EAX, EBX, ECX, EDX }
+        int &r_eax = reg_eflags[0];
+        int &r_ebx = reg_eflags[1];
+        int &r_ecx = reg_eflags[2];
+        int &r_edx = reg_eflags[3];
+
+        cpuid(reg_eflags, CPUID_MAGIC_QUERY_INFO_CACHE);
+
+        // https://sandpile.org/x86/cpuid.htm
+
+        // cache per cores
+        int cores = ((r_eax >> 26) & (0b111111)) + 1;
+        std::cout << cores <<std::endl;
+
+        // threads per cache
+        int tpc = ((r_eax >> 14) & (0b111111111111)) + 1;
+        std::cout << tpc <<std::endl;
+
+        // cache levels
+        int cachel = ((r_eax >> 5) & (0b111)) + 1;
+        std::cout << cachel <<std::endl;
+
+        int cachetype = ((r_eax >> 0) & (0b11111)) + 1;
+        std::cout << cachetype <<std::endl;
+    }
+    */
 
     void inspect_cpu_name() {
         // https://stackoverflow.com/questions/850774/how-to-determine-the-hardware-cpu-and-ram-on-a-machine
         char CPUBrandString[0x40];
-        int cpuInfo[4] = {0,0,0,0};
+        int cpuInfo[4] = {0};
 
         cpuid(cpuInfo, 0x80000000);
         unsigned int nExIds = cpuInfo[0];
@@ -143,44 +180,39 @@ private:
     }
 
     void inspect_hypervisor_presence() {
-        // https://stackoverflow.com/questions/41750144/c-how-to-detect-the-virtual-machine-your-application-is-running-in-has-focus
-        // https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwjGqfaIst_5AhXUtKQKHfjSAWoQFnoECAsQAQ&url=https%3A%2F%2Fwww.duo.uio.no%2Fbitstream%2Fhandle%2F10852%2F51631%2FThesis_Maghsoud.pdf%3Fsequence%3D1&usg=AOvVaw0wPR7iYvbNxC38M3SJ99_8
         int cpuInfo[4] = {};
 
-        //
-        // Upon execution, code should check bit 31 of register ECX
-        // (the “hypervisor present bit”). If this bit is set, a hypervisor is present.
-        // In a non-virtualized environment, the bit will be clear.
-        //
+        // Check CPUID "hypervisor present bit"
         cpuid(cpuInfo, 1);
+        if (cpuInfo[2] & (1 << 31))
+            hvPresentBitSet_ = true;
 
-        if (!(cpuInfo[2] & (1 << 31)))
-            return;
+        // Check CPUID vendor string
+        cpuid(cpuInfo, CPUID_MAGIC_QUERY_VENDOR_ID);
 
-        //
-        // A hypervisor is running on the machine. Query the vendor id.
-        //
-        const auto queryVendorIdMagic = 0x40000000;
-        cpuid(cpuInfo, queryVendorIdMagic);
-
-        memcpy(hyperVendorId + 0, &cpuInfo[1], 4);
-        memcpy(hyperVendorId + 4, &cpuInfo[2], 4);
-        memcpy(hyperVendorId + 8, &cpuInfo[3], 4);
-        hyperVendorId[12] = '\0';
+        memcpy(hvVendorId_ + 0, &cpuInfo[1], 4);
+        memcpy(hvVendorId_ + 4, &cpuInfo[2], 4);
+        memcpy(hvVendorId_ + 8, &cpuInfo[3], 4);
+        hvVendorId_[12] = '\0';
 
         const std::map<const char*, const char*> vendors {
-            { "KVMKVMKVM\0\0\0", "KVM" },
-            { "Microsoft Hv", "Microsoft Hyper-V or Windows Virtual PC" },
-            { "VMwareVMware", "VMware" },
-            { "XenVMMXenVMM", "Xen" },
-            { "prl hyperv  ", "Parallels" },
-            { "VBoxVBoxVBox", "VirtualBox" }
+            { CPUID_VENDOR_QEMU         , HYPERVISOR_VENDOR_QEMU       },
+            { CPUID_VENDOR_KVM          , HYPERVISOR_VENDOR_KVM        },
+            { CPUID_VENDOR_KVM_ALT      , HYPERVISOR_VENDOR_KVM        },
+            { CPUID_VENDOR_VMWARE       , HYPERVISOR_VENDOR_VMWARE     },
+            { CPUID_VENDOR_VIRTUALBOX   , HYPERVISOR_VENDOR_VIRTUALBOX },
+            { CPUID_VENDOR_XEN          , HYPERVISOR_VENDOR_XEN        },
+            { CPUID_VENDOR_HYPERV       , HYPERVISOR_VENDOR_HYPERV     },
+            { CPUID_VENDOR_PARALLELS    , HYPERVISOR_VENDOR_PARALLELS  },
+            { CPUID_VENDOR_PARALLELS_ALT, HYPERVISOR_VENDOR_PARALLELS  },
+            { CPUID_VENDOR_BHYVE        , HYPERVISOR_VENDOR_BHYVE      },
+            { CPUID_VENDOR_QNX          , HYPERVISOR_VENDOR_QNX        }
         };
 
         for (const auto& vendor : vendors) {
-            if (!memcmp(vendor.first, hyperVendorId, HYPER_VENDOR_ID_LENGTH)) {
-                vmDetected = true;
-                vmName = std::string(vendor.second);
+            if (!memcmp(vendor.first, hvVendorId_, CPUID_VENDOR_ID_LENGTH)) {
+                hvVendorStringSet_ = true;
+                hvVendorName_ = std::string(vendor.second);
             }
         }
     }
@@ -237,10 +269,13 @@ public:
         std::cout << "CPUs (threads): " << cpuCores << std::endl;
 
         std::cout << "Virtual Machine: ";
-        if (vmDetected)
-            std::cout << "Hypervisor detected - " << vmName << " (vendor: \"" << hyperVendorId << "\")";
-        else
-            std::cout << "Hypervisor not detected" << " (vendor: \"" << hyperVendorId << "\")";
+        if (hvPresentBitSet_ || hvVendorStringSet_) {
+            std::cout << "Hypervisor detected" << std::endl;
+            std::cout << "  Hypervisor presence bit: " << (hvPresentBitSet_ ? "set" : "not set") << std::endl;
+            std::cout << "  Hypervisor vendor: " << (hvVendorStringSet_ ? hvVendorName_ : "unknown") << " (vendor: \"" << hvVendorId_ << "\")" << std::endl;
+        } else {
+            std::cout << "Hypervisor not detected" << std::endl;
+        }
 
         std::cout << std::endl << std::endl;
     }
