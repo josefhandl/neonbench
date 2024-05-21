@@ -97,10 +97,18 @@ public:
         std::cout << "--------------------------------------" << std::endl;
 
         std::vector<cl::Platform> platformList;
+
+    try {
         cl::Platform::get(&platformList);
+    } catch (const cl::Error &err) {
+        std::cout << "An error occurred while retrieving information about OpenCL platform" << std::endl;
+        std::cout << std::endl;
+        return;
+    }
 
         if (platformList.size() == 0) {
             std::cout << "No OpenCL platform available" << std::endl;
+            std::cout << std::endl;
             return;
         }
 
@@ -113,6 +121,8 @@ public:
 
             if (deviceList.size() == 0) {
                 std::cout << "No OpenCL device available for this platform" << std::endl;
+                std::cout << std::endl;
+                continue;
             }
 
             deviceTotal += deviceList.size();
