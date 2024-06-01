@@ -107,6 +107,7 @@ int main(int argc, char *argv[]) {
 
     // Print info
     //=============
+    moduleSystem.printInfo();
     for (const auto & module : modules) {
         module->inspect();
         module->printInfo();
