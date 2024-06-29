@@ -3,14 +3,12 @@ project(neonbench)
 
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_C_STANDARD 17)
-#set(CMAKE_C_FLAGS "-Wall -Wextra -fdeclspec -v")
-set(CMAKE_C_FLAGS "-Wall -Wextra -v")
+set(CMAKE_C_FLAGS "-Wall -Wextra -fdeclspec")
 
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-#set(CMAKE_CXX_FLAGS "-Wall -Wextra -fdeclspec -v")
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -v")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -fdeclspec")
 
 # Define colors for unix terminal
 if(NOT WIN32)
