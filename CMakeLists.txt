@@ -3,18 +3,61 @@ project(neonbench)
 
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_FLAGS "-Wall -Wextra -fdeclspec")
+#set(CMAKE_C_FLAGS "-Wall -Wextra -fdeclspec -v")
+set(CMAKE_C_FLAGS "-Wall -Wextra -v")
 
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -fdeclspec")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#set(CMAKE_CXX_FLAGS "-Wall -Wextra -fdeclspec -v")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -v")
+
+
+if(NOT WIN32)
+  string(ASCII 27 Esc)
+  set(ColourReset "${Esc}[m")
+  set(ColourBold  "${Esc}[1m")
+  set(Red         "${Esc}[31m")
+  set(Green       "${Esc}[32m")
+  set(Yellow      "${Esc}[33m")
+  set(Blue        "${Esc}[34m")
+  set(Magenta     "${Esc}[35m")
+  set(Cyan        "${Esc}[36m")
+  set(White       "${Esc}[37m")
+  set(BoldRed     "${Esc}[1;31m")
+  set(BoldGreen   "${Esc}[1;32m")
+  set(BoldYellow  "${Esc}[1;33m")
+  set(BoldBlue    "${Esc}[1;34m")
+  set(BoldMagenta "${Esc}[1;35m")
+  set(BoldCyan    "${Esc}[1;36m")
+  set(BoldWhite   "${Esc}[1;37m")
+endif()
+
 
 # Set the vcpkg toolchain file
 set(CMAKE_TOOLCHAIN_FILE ./vcpkg/scripts/buildsystems/vcpkg.cmake)
 
-# Find OpenCL and CUDA
+
+# Ensure CMake policies are set
+if(POLICY CMP0146)
+    cmake_policy(SET CMP0146 NEW)
+endif()
+
+
+# Find OpenCL, CUDA and HIP
 find_package(OpenCL)
 find_package(CUDA)
+
+# Find HIP
+#set(CMAKE_MODULE_PATH "${ROCM_PATH}/lib/cmake/hip")
+#find_package(HIP MODULE)
+set(CMAKE_THREAD_LIBS_INIT "-lpthread")
+# Find packages
+find_package(Threads REQUIRED)
+set(ROCM_PATH $ENV{ROCM_PATH})
+# Use CMAKE_PREFIX_PATH to help CMake find ROCm packages
+list(APPEND CMAKE_PREFIX_PATH "${ROCM_PATH}/lib/cmake/hip")
+find_package(HIP REQUIRED)
 
 # Build own CPU libs
 add_subdirectory(cpu)
@@ -26,15 +69,15 @@ if(OpenCL_FOUND)
         link_directories(./vcpkg/packages/opencl_x64-windows/lib)
     endif()
     add_compile_definitions(HAVE_OPENCL=1)
-    message("OpenCL found, building with OpenCL support.")
+    message("${BoldGreen}OpenCL found, building with OpenCL support.${ColourReset}")
 else()
-    message("OpenCL not found, building without OpenCL support.")
+    message("${BoldYellow}OpenCL not found, building without OpenCL support.${ColourReset}")
 endif()
 
 # check if CUDA is available
 if(CUDA_FOUND)
     add_compile_definitions(HAVE_CUDA=1)
-    message("CUDA found, building with CUDA support.")
+    message("${BoldGreen}CUDA found, building with CUDA support.${ColourReset}")
 
     # build CUDA obj
     cuda_add_library(cuda_obj cuda/cuda.cu)
@@ -48,7 +91,52 @@ if(CUDA_FOUND)
     )
     target_include_directories(cuda_obj PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/cuda)
 else()
-    message("CUDA not found, building without CUDA support.")
+    message("${BoldYellow}CUDA not found, building without CUDA support.${ColourReset}")
+endif()
+
+if(HIP_FOUND)
+    add_compile_definitions(HAVE_HIP=1)
+    message("${BoldGreen}HIP found, building with HIP support.${ColourReset}")
+
+    set(CMAKE_CXX_FLAGS "--rocm-path=/opt/rocm ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_COMPILER hipcc)
+
+    # Build HIP object
+    #set(HIP_HOST_COMPILER "hipcc")
+    #hip_add_library(hip_obj hip/hip.hip)
+    #set_target_properties(hip_obj PROPERTIES
+    #    HIP_STANDARD 14
+    #    HIP_STANDARD_REQUIRED ON
+    #    HIP_EXTENSIONS OFF
+    #    HIP_SEPARABLE_COMPILATION ON
+    #)
+    #target_include_directories(hip_obj PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/hip)
+        # Build HIP object
+
+        # Set source files properties for HIP
+    set_source_files_properties(hip/hip.hip PROPERTIES LANGUAGE HIP)
+    set_source_files_properties(hip/kernel.hip PROPERTIES LANGUAGE HIP)
+
+        # Set HIP architectures
+    set(HIP_ARCHITECTURES "gfx1103")  # Replace with your specific GPU architecture
+    enable_language(HIP)
+
+    add_library(hip_obj hip/hip.hip hip/kernel.hip)
+    set_target_properties(hip_obj PROPERTIES
+        HIP_STANDARD 14
+        HIP_STANDARD_REQUIRED ON
+        HIP_EXTENSIONS OFF
+        HIP_SEPARABLE_COMPILATION ON
+	HIP_ARCHITECTURES ${HIP_ARCHITECTURES}
+    )
+    target_include_directories(hip_obj PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/hip)
+    target_link_libraries(hip_obj PRIVATE hip::host)
+    message("HIP object 'hip_obj' created.")
+
+    # Link the HIP object to the executable
+    #target_link_libraries(neonbench hip_obj hip::host)
+else()
+    message("${BoldYellow}HIP not found, building without HIP support.${ColourReset}")
 endif()
 
 # build main bin
@@ -97,5 +185,14 @@ endif()
 if(CUDA_FOUND)
     target_link_libraries(${PROJECT_NAME}
         cuda_obj
+    )
+endif()
+
+# Link HIP library if available
+if(HIP_FOUND)
+    target_link_libraries(${PROJECT_NAME}
+        hip_obj
+	hip::host
+	Threads::Threads
     )
 endif()

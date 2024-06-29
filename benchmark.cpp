@@ -16,6 +16,9 @@
 #ifdef HAVE_CUDA
 #include "cuda/wrapper.hpp"
 #endif
+#ifdef HAVE_HIP
+#include "hip/wrapper.hpp"
+#endif
 
 void printUsage() {
     std::cout << "Usage:" << std::endl;
@@ -27,6 +30,7 @@ void printUsage() {
     std::cout << "\t--ram   \tenable RAM module" << std::endl;
     std::cout << "\t--opencl\tenable OpenCL module for both CPUs and GPUs" << std::endl;
     std::cout << "\t--cuda  \tenable CUDA module" << std::endl;
+    std::cout << "\t--hip   \tenable HIP module" << std::endl;
     std::cout << "\t--gpu   \tenable OpenCL and CUDA modules" << std::endl;
     std::cout << "\t--info  \tshow only info using enabled modules, without benchmark" << std::endl;
 }
@@ -38,6 +42,7 @@ int main(int argc, char *argv[]) {
     bool ram    = false;
     bool opencl = false;
     bool cuda   = false;
+    bool hip    = false;
     bool specifiedDevices = false;
     bool benchmark = true;
 
@@ -63,10 +68,14 @@ int main(int argc, char *argv[]) {
             } else if (option == "--cuda") {
                 specifiedDevices = true;
                 cuda = true;
+            } else if (option == "--hip") {
+                specifiedDevices = true;
+                hip = true;
             } else if (option == "--gpu") {
                 specifiedDevices = true;
                 opencl = true;
                 cuda = true;
+		hip = true;
             } else if (option == "--info") {
                 benchmark = false;
             } else {
@@ -82,6 +91,7 @@ int main(int argc, char *argv[]) {
         ram    = true;
         opencl = true;
         cuda   = true;
+        hip    = true;
     }
 
     // Init modules
@@ -103,6 +113,10 @@ int main(int argc, char *argv[]) {
     #ifdef HAVE_CUDA
     if (cuda)
         modules.emplace_back(std::make_unique<ModulesCuda>());
+    #endif
+    #ifdef HAVE_HIP
+    if (hip)
+        modules.emplace_back(std::make_unique<ModuleHip>());
     #endif
 
     // Print info
