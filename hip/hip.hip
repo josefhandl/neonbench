@@ -4,7 +4,7 @@
 
 #include "kernel.hip"
 
-extern "C" int64_t cu_make_hip_benchmark(const int device, unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR) {
+extern "C" int64_t hip_make_hip_benchmark(const int device, unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR) {
     hipSetDevice(device);
 
     auto s = std::chrono::high_resolution_clock::now();
@@ -42,7 +42,7 @@ extern "C" int64_t cu_make_hip_benchmark(const int device, unsigned matSize, uns
     return t.count();
 }
 
-extern "C" void cu_printInfo(int &deviceCount) {
+extern "C" void hip_printInfo(int &deviceCount) {
     hipError_t error_id = hipGetDeviceCount(&deviceCount);
     if (error_id != hipSuccess) {
         printf("hipGetDeviceCount returned %d\n-> %s\n", (int)error_id, hipGetErrorString(error_id));

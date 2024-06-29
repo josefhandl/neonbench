@@ -10,8 +10,8 @@
 #elif __linux__
 #endif
 
-extern "C" int64_t cu_make_hip_benchmark(const int device, unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR);
-extern "C" void cu_printInfo(int &deviceCount);
+extern "C" int64_t hip_make_hip_benchmark(const int device, unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR);
+extern "C" void hip_printInfo(int &deviceCount);
 
 class ModuleHip : public NeonbenchModule {
 
@@ -21,7 +21,7 @@ private:
     int deviceCount = 0;
 
     int64_t make_hip_benchmark(const int device, unsigned matSize, unsigned testIter, const float *matA, const float *matB, float *matR) {
-        return cu_make_hip_benchmark(device, matSize, testIter, matA, matB, matR);
+        return hip_make_hip_benchmark(device, matSize, testIter, matA, matB, matR);
     }
 
 public:
@@ -36,7 +36,7 @@ public:
         std::cout << "HIP info:" << std::endl;
         std::cout << "--------------------------------------" << std::endl;
         
-        cu_printInfo(deviceCount);
+        hip_printInfo(deviceCount);
         
         std::cout << std::endl;
     }
