@@ -1,6 +1,12 @@
+#ifndef NEONBENCH_HIP_HIP
+#define NEONBENCH_HIP_HIP
+
+
 #include <iostream>
 #include <chrono>
 #include <hip/hip_runtime.h>
+
+#include "../tools.hpp"
 
 #include "kernel.hip"
 
@@ -71,3 +77,4 @@ extern "C" void hip_printInfo(int &deviceCount) {
     }
 }
 
+#endif //NEONBENCH_HIP_HIP

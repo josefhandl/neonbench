@@ -115,7 +115,7 @@ else()
 endif()
 
 # build main bin
-add_executable(${PROJECT_NAME} benchmark.cpp)
+add_executable(${PROJECT_NAME} benchmark.cpp tools.cpp)
 
 include_directories(${CMAKE_SOURCE_DIR}/cpu)
 
