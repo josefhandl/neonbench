@@ -74,16 +74,8 @@ if(CUDA_FOUND)
     message("${BoldGreen}CUDA found, building with CUDA support.${ColourReset}")
 
     # build CUDA obj
+    set(CUDA_HOST_COMPILER "gcc")
     cuda_add_library(cuda_obj cuda/cuda.cu)
-    set(CUDA_NVCC_FLAGS "")
-    set(CMAKE_CUDA_FLAGS "")
-    set_target_properties(cuda_obj PROPERTIES
-        CUDA_STANDARD 14
-        CUDA_STANDARD_REQUIRED ON
-        CUDA_EXTENSIONS OFF
-        CUDA_SEPARABLE_COMPILATION ON
-    )
-    target_include_directories(cuda_obj PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/cuda)
 else()
     message("${BoldYellow}CUDA not found, building without CUDA support.${ColourReset}")
 endif()

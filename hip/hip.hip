@@ -65,15 +65,98 @@ extern "C" void hip_printInfo(int &deviceCount) {
         hipDeviceProp_t deviceProp;
         hipGetDeviceProperties(&deviceProp, dev);
 
-        printf("Device %d: \"%s\"\n", dev, deviceProp.name);
-        printf("  Total global memory: %lu bytes\n", deviceProp.totalGlobalMem);
-        printf("  Shared memory per block: %lu bytes\n", deviceProp.sharedMemPerBlock);
-        printf("  Registers per block: %d\n", deviceProp.regsPerBlock);
-        printf("  Warp size: %d\n", deviceProp.warpSize);
-        printf("  Max threads per block: %d\n", deviceProp.maxThreadsPerBlock);
-        printf("  Max threads dimensions: [ %d, %d, %d ]\n", deviceProp.maxThreadsDim[0], deviceProp.maxThreadsDim[1], deviceProp.maxThreadsDim[2]);
-        printf("  Max grid size: [ %d, %d, %d ]\n", deviceProp.maxGridSize[0], deviceProp.maxGridSize[1], deviceProp.maxGridSize[2]);
-        printf("\n");
+        std::cout << "Device " << dev << ": " << deviceProp.name << std::endl;
+        std::cout << "  Device PCI Domain ID: " << deviceProp.pciDomainID << std::endl;
+        std::cout << "  Device PCI Bus ID: " << deviceProp.pciBusID << std::endl;
+        std::cout << "  Device PCI Device ID: " << deviceProp.pciDeviceID << std::endl;
+
+        // Total global memory size
+        int64_t memSize = deviceProp.totalGlobalMem;
+        std::string memSizeStr;
+        num_bin_prefix((int64_t)memSize, &memSizeStr);
+        std::cout << "  Total global memory: " << memSizeStr << "B" << std::endl;
+
+        // Shared memory per block size
+        int64_t sharedMemPerBlock = deviceProp.sharedMemPerBlock;
+        std::string sharedMemPerBlockStr;
+        num_bin_prefix((int64_t)sharedMemPerBlock, &sharedMemPerBlockStr);
+        std::cout << "  Shared memory per block: " << sharedMemPerBlockStr << "B" << std::endl;
+
+        std::cout << "  Registers per block: " << deviceProp.regsPerBlock << std::endl;
+        std::cout << "  Warp size: " << deviceProp.warpSize << std::endl;
+        std::cout << "  Max threads per multiprocessor: " << deviceProp.maxThreadsPerMultiProcessor << std::endl;
+        std::cout << "  Compute units: " << deviceProp.multiProcessorCount << std::endl;
+        std::cout << "  Memory bus width: " << deviceProp.memoryBusWidth << std::endl;
+        std::cout << "  Memory clock rate: " << deviceProp.memoryClockRate << " kHz" << std::endl;
+
+        if (deviceProp.ECCEnabled) {
+            std::cout << "  ECC enabled: Yes" << std::endl;
+        } else {
+            std::cout << "  ECC enabled: No" << std::endl;
+        }
+
+        int64_t l2CacheSize = deviceProp.l2CacheSize;
+        std::string l2CacheSizeStr;
+        num_bin_prefix((int64_t)l2CacheSize, &l2CacheSizeStr);
+        std::cout << "  L2 cache size: " << l2CacheSizeStr << "B" << std::endl;
+
+        std::cout << "  GCN architecture name: " << deviceProp.gcnArchName << std::endl;
+
+        std::cout << "  Clock rate: " << deviceProp.clockRate << " kHz" << std::endl;
+
+        if (deviceProp.managedMemory) {
+            std::cout << "  Unified shared memory: Yes" << std::endl;
+        } else {
+            std::cout << "  Unified shared memory: No" << std::endl;
+        }
+
+        std::cout << "  Compute mode: " << deviceProp.computeMode << std::endl;
+        if (deviceProp.canMapHostMemory) {
+            std::cout << "  Can map host memory: Yes" << std::endl;
+        } else {
+            std::cout << "  Can map host memory: No" << std::endl;
+        }
+
+        if (deviceProp.pageableMemoryAccess) {
+            std::cout << "  Pageable memory access: Yes" << std::endl;
+        } else {
+            std::cout << "  Pageable memory access: No" << std::endl;
+        }
+
+        if (deviceProp.integrated) {
+            std::cout << "  Integrated: Yes" << std::endl;
+        } else {
+            std::cout << "  Integrated: No" << std::endl;
+        }
+
+        if (deviceProp.isLargeBar) {
+            std::cout << "  Large bar: Yes" << std::endl;
+        } else {
+            std::cout << "  Large bar: No" << std::endl;
+        }
+
+        // asic revision
+        std::cout << "  ASIC revision: " << deviceProp.asicRevision << std::endl;
+
+        // atomics
+        std::cout << "  Device has atomic memory capabilities: " << deviceProp.hostNativeAtomicSupported << std::endl;
+
+        if (deviceProp.unifiedAddressing) {
+            std::cout << "  Unified addressing: Yes" << std::endl;
+        } else {
+            std::cout << "  Unified addressing: No" << std::endl;
+        }
+
+        std::cout << "  Concurrent copy and kernel execution: " << deviceProp.deviceOverlap << std::endl;
+
+        std::cout << "  Concurrent kernels: " << deviceProp.concurrentKernels << std::endl;
+        std::cout << "  Concurrent managed access: " << deviceProp.concurrentManagedAccess << std::endl;
+        std::cout << "  Device type: " << deviceProp.deviceOverlap << std::endl;
+
+        std::cout << "  Max threads per block: " << deviceProp.maxThreadsPerBlock << std::endl;
+        std::cout << "  Max threads dimensions: [ " << deviceProp.maxThreadsDim[0] << ", " << deviceProp.maxThreadsDim[1] << ", " << deviceProp.maxThreadsDim[2] << " ]" << std::endl;
+        std::cout << "  Max grid size: [ " << deviceProp.maxGridSize[0] << ", " << deviceProp.maxGridSize[1] << ", " << deviceProp.maxGridSize[2] << " ]" << std::endl;
+        std::cout << std::endl;
     }
 }
 
