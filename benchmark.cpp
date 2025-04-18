@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
     #endif
     #ifdef HAVE_CUDA
     if (cuda)
-        modules.emplace_back(std::make_unique<ModulesCuda>());
+        modules.emplace_back(std::make_unique<ModuleCuda>());
     #endif
     #ifdef HAVE_HIP
     if (hip)

@@ -3,12 +3,12 @@ project(neonbench)
 
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_FLAGS "-Wall -Wextra -fdeclspec")
+set(CMAKE_C_FLAGS "-Wall -Wextra")
 
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -fdeclspec")
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 
 # Define colors for unix terminal
 if(NOT WIN32)
@@ -35,13 +35,6 @@ endif()
 # Set the vcpkg toolchain file
 set(CMAKE_TOOLCHAIN_FILE ./vcpkg/scripts/buildsystems/vcpkg.cmake)
 
-
-# Ensure CMake policies are set
-if(POLICY CMP0146)
-    cmake_policy(SET CMP0146 NEW)
-endif()
-
-
 # Find OpenCL, CUDA
 find_package(OpenCL)
 find_package(CUDA)
@@ -51,7 +44,7 @@ set(CMAKE_THREAD_LIBS_INIT "-lpthread")
 find_package(Threads REQUIRED)
 set(ROCM_PATH $ENV{ROCM_PATH})
 list(APPEND CMAKE_PREFIX_PATH "${ROCM_PATH}/lib/cmake/hip")
-find_package(HIP REQUIRED)
+find_package(HIP)
 
 # Build own CPU libs
 add_subdirectory(cpu)
@@ -74,16 +67,8 @@ if(CUDA_FOUND)
     message("${BoldGreen}CUDA found, building with CUDA support.${ColourReset}")
 
     # build CUDA obj
+    set(CUDA_HOST_COMPILER "gcc")
     cuda_add_library(cuda_obj cuda/cuda.cu)
-    set(CUDA_NVCC_FLAGS "")
-    set(CMAKE_CUDA_FLAGS "")
-    set_target_properties(cuda_obj PROPERTIES
-        CUDA_STANDARD 14
-        CUDA_STANDARD_REQUIRED ON
-        CUDA_EXTENSIONS OFF
-        CUDA_SEPARABLE_COMPILATION ON
-    )
-    target_include_directories(cuda_obj PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/cuda)
 else()
     message("${BoldYellow}CUDA not found, building without CUDA support.${ColourReset}")
 endif()
