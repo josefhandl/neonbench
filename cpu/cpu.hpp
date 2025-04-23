@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <cmath>
 
 #include "../tools.hpp"
 #include "../neonbench-module.hpp"

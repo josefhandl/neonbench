@@ -1,6 +1,8 @@
 #ifndef NEONBENCH_TOOLS_HPP
 #define NEONBENCH_TOOLS_HPP
 
+#include <string>
+
 #include "benchmarked-object-float.hpp"
 
 void num_si_prefix(int64_t n, std::string *numStr);
